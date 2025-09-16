@@ -1,9 +1,11 @@
+import 'package:absensi_apps/api/register_user.dart';
 import 'package:absensi_apps/extension/navigation.dart';
+import 'package:absensi_apps/shared_preferences.dart/shared_preference.dart';
 import 'package:absensi_apps/utils/copy_right_screen.dart';
 import 'package:absensi_apps/views/buttom_nav.dart';
 import 'package:absensi_apps/views/register_screen.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -17,8 +19,39 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  // bool isPassword = false;
+  bool isLoading = false;
   bool isVisibility = false;
+  String? errorMessage;
+
+  Future<void> _login() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        isLoading = true;
+        errorMessage = null;
+      });
+
+      try {
+        final loginResponse = await AuthenticationAPI.loginUser(
+          email: emailController.text.trim(),
+          password: passwordController.text.trim(),
+        );
+        PreferenceHandler.saveToken(loginResponse.data?.token ?? '');
+        context.pushReplacement(ButtomNav());
+      } catch (e) {
+        setState(() {
+          errorMessage = e.toString();
+        });
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Login gagal: $e')));
+      } finally {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -63,21 +96,50 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ],
           ),
-          SizedBox(height: 20,),
-          Text("Selamat Datang", style: TextStyle(fontSize: 20, fontFamily: "StageGrotesk_Bold"),),
+          SizedBox(height: 20),
+          Text(
+            "Selamat Datang",
+            style: TextStyle(fontSize: 20, fontFamily: "StageGrotesk_Bold"),
+          ),
           SizedBox(height: 30),
           Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("Email", style: TextStyle(fontSize: 16, fontFamily: "StageGrotesk_Regular")),
+                // Error message
+                if (errorMessage != null)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Text(
+                      errorMessage!,
+                      style: TextStyle(color: Colors.red),
+                    ),
+                  ),
+                SizedBox(height: 10),
+
+                Text(
+                  "Email",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontFamily: "StageGrotesk_Regular",
+                  ),
+                ),
                 SizedBox(height: 10),
                 SizedBox(
                   width: 350,
                   height: 50,
                   child: TextFormField(
                     controller: emailController,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Email tidak boleh kosong';
+                      }
+                      if (!value.contains('@')) {
+                        return 'Format email tidak valid';
+                      }
+                      return null;
+                    },
                     decoration: InputDecoration(
                       contentPadding: EdgeInsets.only(top: 10),
                       prefixIcon: Transform.translate(
@@ -87,20 +149,34 @@ class _LoginScreenState extends State<LoginScreen> {
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      hint: Text("Email Anda"),
-                      
+                      hintText: "Email Anda",
                     ),
                   ),
                 ),
                 SizedBox(height: 30),
-                Text("Password", style: TextStyle(fontSize: 16, fontFamily: "StageGrotesk_Regular")),
+                Text(
+                  "Password",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontFamily: "StageGrotesk_Regular",
+                  ),
+                ),
                 SizedBox(height: 10),
                 SizedBox(
                   width: 350,
                   height: 50,
-                  child: TextField(
+                  child: TextFormField(
                     controller: passwordController,
                     obscureText: !isVisibility,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Password tidak boleh kosong';
+                      }
+                      if (value.length < 6) {
+                        return 'Password minimal 6 karakter';
+                      }
+                      return null;
+                    },
                     decoration: InputDecoration(
                       contentPadding: EdgeInsets.only(top: 10),
                       prefixIcon: Transform.translate(
@@ -110,45 +186,56 @@ class _LoginScreenState extends State<LoginScreen> {
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      hint: Text("Password Anda"),
+                      hintText: "Password Anda",
                       suffixIcon: IconButton(
-                              onPressed: () {
-                                setState(() {
-                                  isVisibility = !isVisibility;
-                                });
-                              },
-                              icon: Icon(
-                                isVisibility
-                                    ? Icons.visibility
-                                    : Icons.visibility_off,
-                              ),
-                            )
+                        onPressed: () {
+                          setState(() {
+                            isVisibility = !isVisibility;
+                          });
+                        },
+                        icon: Icon(
+                          isVisibility
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                        ),
+                      ),
                     ),
-                    
                   ),
                 ),
-                Text("Lupa password?", style: TextStyle(fontFamily: "StageGrotesk_Regular"),),
+                TextButton(
+                  onPressed: () {
+                    // TODO: Implement forgot password
+                  },
+                  child: Text(
+                    "Lupa password?",
+                    style: TextStyle(fontFamily: "StageGrotesk_Regular"),
+                  ),
+                ),
                 SizedBox(height: 20),
                 SizedBox(
                   height: 56,
                   width: 350,
                   child: ElevatedButton(
-                    onPressed: () {
-                      context.pushReplacement(ButtomNav());
-                    },
-                    child: Text(
-                      "Masuk",
-                      style: TextStyle(color: Colors.white, fontSize: 16, fontFamily: "StageGrotesk_Bold"),
-                    ),
+                    onPressed: isLoading ? null : _login,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Color(0xFF1E3A8A),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
+                    child: isLoading
+                        ? CircularProgressIndicator(color: Colors.white)
+                        : Text(
+                            "Masuk",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontFamily: "StageGrotesk_Bold",
+                            ),
+                          ),
                   ),
                 ),
-                SizedBox(height: 20,),
+                SizedBox(height: 20),
                 Padding(
                   padding: const EdgeInsets.only(left: 100),
                   child: Text.rich(
@@ -176,19 +263,18 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 ),
-                
               ],
             ),
           ),
-          SizedBox(height: 150,),
+          SizedBox(height: 100),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Image.asset(CopyRightScreen.cc, height: 20, width: 20,),
-              SizedBox(width: 10,),
-              Text("By Triana Julianingsih")
+              Image.asset(CopyRightScreen.cc, height: 20, width: 20),
+              SizedBox(width: 10),
+              Text("By Triana Julianingsih"),
             ],
-          )
+          ),
         ],
       ),
     );

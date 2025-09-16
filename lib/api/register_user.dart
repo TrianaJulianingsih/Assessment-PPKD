@@ -1,5 +1,7 @@
 import 'dart:convert';
+
 import 'package:absensi_apps/api/endpoint/endpoint.dart';
+import 'package:absensi_apps/models/get_batches_model.dart';
 import 'package:absensi_apps/models/get_list_training_model.dart';
 import 'package:absensi_apps/models/get_profile_model.dart';
 import 'package:absensi_apps/models/login_model.dart';
@@ -113,6 +115,23 @@ class AuthenticationAPI {
 
     if (response.statusCode == 200) {
       return GetListTrainingModel.fromJson(json.decode(response.body));
+    } else {
+      final error = json.decode(response.body);
+      throw Exception(error["message"] ?? "Gagal mengambil data layanan");
+    }
+  }
+
+  static Future<GetBatchesModel> getListBatch() async {
+    final url = Uri.parse(Endpoint.batches);
+    final token = await PreferenceHandler.getToken();
+
+    final response = await http.get(
+      url,
+      headers: {"Accept": "application/json", "Authorization": "Bearer $token"},
+    );
+
+    if (response.statusCode == 200) {
+      return GetBatchesModel.fromJson(json.decode(response.body));
     } else {
       final error = json.decode(response.body);
       throw Exception(error["message"] ?? "Gagal mengambil data layanan");
