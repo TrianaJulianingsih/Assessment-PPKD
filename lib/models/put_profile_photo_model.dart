@@ -4,42 +4,34 @@
 
 import 'dart:convert';
 
-PutProfilePhotoModel putProfilePhotoModelFromJson(String str) => PutProfilePhotoModel.fromJson(json.decode(str));
+PutProfilePhotoModel putProfilePhotoModelFromJson(String str) =>
+    PutProfilePhotoModel.fromJson(json.decode(str));
 
-String putProfilePhotoModelToJson(PutProfilePhotoModel data) => json.encode(data.toJson());
+String putProfilePhotoModelToJson(PutProfilePhotoModel data) =>
+    json.encode(data.toJson());
 
 class PutProfilePhotoModel {
-    String? message;
-    Data? data;
+  String? message;
+  Data? data;
 
-    PutProfilePhotoModel({
-        this.message,
-        this.data,
-    });
+  PutProfilePhotoModel({this.message, this.data});
 
-    factory PutProfilePhotoModel.fromJson(Map<String, dynamic> json) => PutProfilePhotoModel(
+  factory PutProfilePhotoModel.fromJson(Map<String, dynamic> json) =>
+      PutProfilePhotoModel(
         message: json["message"],
         data: json["data"] == null ? null : Data.fromJson(json["data"]),
-    );
+      );
 
-    Map<String, dynamic> toJson() => {
-        "message": message,
-        "data": data?.toJson(),
-    };
+  Map<String, dynamic> toJson() => {"message": message, "data": data?.toJson()};
 }
 
 class Data {
-    String? profilePhoto;
+  String? profilePhoto;
 
-    Data({
-        this.profilePhoto,
-    });
+  Data({this.profilePhoto});
 
-    factory Data.fromJson(Map<String, dynamic> json) => Data(
-        profilePhoto: json["profile_photo"],
-    );
+  factory Data.fromJson(Map<String, dynamic> json) =>
+      Data(profilePhoto: json["profile_photo"]);
 
-    Map<String, dynamic> toJson() => {
-        "profile_photo": profilePhoto,
-    };
+  Map<String, dynamic> toJson() => {"profile_photo": profilePhoto};
 }

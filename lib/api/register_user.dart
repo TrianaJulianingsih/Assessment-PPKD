@@ -22,14 +22,9 @@ class AuthenticationAPI {
     required int trainingId,
   }) async {
     final url = Uri.parse(Endpoint.register);
-
-    // baca file -> bytes -> base64
     final readImage = profilePhoto.readAsBytesSync();
     final b64 = base64Encode(readImage);
-
-    // tambahkan prefix agar dikenali backend
     final imageWithPrefix = "data:image/png;base64,$b64";
-
     final response = await http.post(
       url,
       headers: {

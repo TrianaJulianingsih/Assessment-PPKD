@@ -5,6 +5,7 @@ class PreferenceHandler {
   static const String userIdKey = "user_id";
   static const String userEmailKey = "user_email";
   static const String userNameKey = "user_name";
+  static const String batchKey = "batch";
   static const String loginKey = "login";
 
   static Future<void> saveUserData(
@@ -12,12 +13,14 @@ class PreferenceHandler {
     int userId,
     String email,
     String name,
+    String batch,
   ) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(tokenKey, token);
     await prefs.setInt(userIdKey, userId);
     await prefs.setString(userEmailKey, email);
     await prefs.setString(userNameKey, name);
+    await prefs.setString(batchKey, batch);
     await prefs.setBool(loginKey, true);
   }
 
@@ -44,6 +47,21 @@ class PreferenceHandler {
   static Future<String?> getUserName() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(userNameKey);
+  }
+
+  static Future<void> setUserName(String userName) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(userNameKey, userName);
+  }
+
+  static Future<String?> getBatch() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(batchKey);
+  }
+
+  static Future<void> setBatch(String batch) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(batchKey, batch);
   }
 
   static Future<bool?> getLoginStatus() async {
