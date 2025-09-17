@@ -1,370 +1,350 @@
+import 'dart:io';
+
 import 'package:absensi_apps/api/register_user.dart';
 import 'package:absensi_apps/extension/navigation.dart';
 import 'package:absensi_apps/models/get_batches_model.dart';
 import 'package:absensi_apps/models/get_list_training_model.dart';
+import 'package:absensi_apps/models/register_model.dart';
 import 'package:absensi_apps/shared_preferences.dart/shared_preference.dart';
-import 'package:absensi_apps/views/buttom_nav.dart';
 import 'package:absensi_apps/views/login_screen.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
-  static const id = "/register_screen";
 
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  bool hidePassword = true;
+  bool isLoading = false;
+  String? errorMessage;
+  RegisterModel? user;
+
+  String? selectedGender;
+  Batches? selectedBatch;
+  Datum? selectedTraining;
+
+  final ImagePicker _picker = ImagePicker();
+  XFile? pickedFile;
+
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
-  bool isLoading = false;
-  bool isVisibility = false;
-  String? errorMessage;
-  String? dropdownSelect;
-  List<Datum>? trainingList = [];
-  Datum? selectedTraining;
-  List<Batch>? batchList = [];
-  Batch? selectedBatches;
+  final TextEditingController passController = TextEditingController();
+
+  List<String> genderList = ["L", "P"];
+  List<Batches> batchList = [];
+  List<Datum> trainingList = [];
 
   @override
   void initState() {
     super.initState();
-    _loadTrainings();
+    fetchDropdownData();
   }
 
-  Future<void> _loadTrainings() async {
+  Future<void> fetchDropdownData() async {
     try {
+      final batchResponse = await AuthenticationAPI.getListBatch();
       final trainingResponse = await AuthenticationAPI.getListTraining();
       setState(() {
-        trainingList = trainingResponse.data;
+        batchList = batchResponse.data ?? [];
+        trainingList = trainingResponse.data ?? [];
       });
     } catch (e) {
-      print('Error loading trainings: $e');
+      print("Error fetch dropdown: $e");
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Gagal load data dropdown: $e")));
     }
   }
 
-  Future<void> _loadBatches() async {
+  Future<void> pickFoto() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    setState(() {
+      pickedFile = image;
+    });
+  }
+
+  Future<void> registerUser() async {
+    final name = nameController.text.trim();
+    final email = emailController.text.trim();
+    final pass = passController.text.trim();
+
+    if (name.isEmpty || email.isEmpty || pass.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Semua field wajib diisi")));
+      return;
+    }
+    PreferenceHandler.saveToken(user?.data?.token.toString() ?? "");
+
+    if (selectedGender == null ||
+        selectedBatch == null ||
+        selectedTraining == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Pilih gender, batch, dan training")),
+      );
+      return;
+    }
+    if (pickedFile == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Foto profil belum dipilih")),
+      );
+      return;
+    }
+
+    setState(() {
+      isLoading = true;
+      errorMessage = null;
+    });
+
     try {
-      final bacthesResponse = await AuthenticationAPI.getListBatch();
-      setState(() {
-        batchList = bacthesResponse.data;
-      });
+      RegisterModel result = await AuthenticationAPI.registerUser(
+        name: name,
+        email: email,
+        password: pass,
+        jenisKelamin: selectedGender!,
+        profilePhoto: File(pickedFile!.path),
+        batchId: selectedBatch!.id!,
+        trainingId: selectedTraining!.id!,
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result.message ?? "Register berhasil")),
+      );
+      context.pushNamed(LoginScreen.id);
     } catch (e) {
-      print('Error loading trainings: $e');
-    }
-  }
-
-  Future<void> _register() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() {
-        isLoading = true;
-        errorMessage = null;
-      });
-
-      try {
-        final registerResponse = await AuthenticationAPI.registerUser(
-          name: nameController.text.trim(),
-          email: emailController.text.trim(),
-          password: passwordController.text.trim(),
-        );
-        PreferenceHandler.saveToken(registerResponse.data?.token ?? '');
-        context.pushReplacement(ButtomNav());
-      } catch (e) {
-        setState(() {
-          errorMessage = e.toString();
-        });
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Registrasi gagal: $e')));
-      } finally {
-        setState(() {
-          isLoading = false;
-        });
-      }
+      setState(() => errorMessage = e.toString());
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Gagal daftar: $errorMessage")));
+    } finally {
+      setState(() => isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 5),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            SizedBox(height: 40),
-            Text(
-              "Daftar Akun",
-              style: TextStyle(fontSize: 20, fontFamily: "StageGrotesk_Bold"),
-            ),
-            SizedBox(height: 20),
-            Container(
-              height: 130,
-              width: 130,
-              decoration: BoxDecoration(
-                color: const Color.fromARGB(55, 0, 0, 0),
-                borderRadius: BorderRadius.circular(100),
-                image: DecorationImage(
-                  image: AssetImage("assets/images/ikon kamera.png"),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        automaticallyImplyLeading: false,
+        title: Text(
+          "Registrasi",
+          style: TextStyle(fontFamily: "StageGrotesk_Bold", fontSize: 20),
+        ),
+        centerTitle: true,
+      ),
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              pickedFile != null
+                  ? CircleAvatar(
+                      radius: 50,
+                      backgroundImage: FileImage(File(pickedFile!.path)),
+                    )
+                  : CircleAvatar(
+                      radius: 50,
+                      backgroundColor: Colors.grey[200],
+                      child: const Icon(
+                        Icons.person,
+                        size: 50,
+                        color: Colors.grey,
+                      ),
+                    ),
+              SizedBox(height: 10),
+              OutlinedButton.icon(
+                onPressed: pickFoto,
+                icon: Icon(Icons.camera_alt, color: Color(0xFF1E3A8A)),
+                label: Text(
+                  "Pilih Foto Profil",
+                  style: TextStyle(
+                    color: Color(0xFF1E3A8A),
+                    fontFamily: "StageGrotesk_Medium",
+                    fontSize: 14,
+                  ),
                 ),
               ),
-            ),
-            SizedBox(height: 20),
-            Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Error message
-                  if (errorMessage != null)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Text(
-                        errorMessage!,
-                        style: TextStyle(color: Colors.red),
-                      ),
-                    ),
-                  SizedBox(height: 10),
-
-                  Text(
-                    "Nama Lengkap",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontFamily: "StageGrotesk_Regular",
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: TextFormField(
-                      controller: nameController,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Nama tidak boleh kosong';
-                        }
-                        return null;
-                      },
-                      decoration: InputDecoration(
-                        contentPadding: EdgeInsets.only(top: 10),
-                        prefixIcon: Transform.translate(
-                          offset: Offset(0, -1),
-                          child: Icon(Icons.person),
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        hintText: "Nama Lengkap Anda",
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  Text(
-                    "Email",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontFamily: "StageGrotesk_Regular",
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: TextFormField(
-                      controller: emailController,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Email tidak boleh kosong';
-                        }
-                        if (!value.contains('@')) {
-                          return 'Format email tidak valid';
-                        }
-                        return null;
-                      },
-                      decoration: InputDecoration(
-                        contentPadding: EdgeInsets.only(top: 10),
-                        prefixIcon: Transform.translate(
-                          offset: Offset(0, -1),
-                          child: Icon(Icons.email),
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        hintText: "Email Anda",
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  Text(
-                    "Password",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontFamily: "StageGrotesk_Regular",
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: TextFormField(
-                      controller: passwordController,
-                      obscureText: !isVisibility,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Password tidak boleh kosong';
-                        }
-                        if (value.length < 6) {
-                          return 'Password minimal 6 karakter';
-                        }
-                        return null;
-                      },
-                      decoration: InputDecoration(
-                        contentPadding: EdgeInsets.only(top: 10),
-                        prefixIcon: Transform.translate(
-                          offset: Offset(0, -1),
-                          child: Icon(Icons.lock),
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        hintText: "Password Anda",
-                        suffixIcon: IconButton(
-                          onPressed: () {
-                            setState(() {
-                              isVisibility = !isVisibility;
-                            });
-                          },
-                          icon: Icon(
-                            isVisibility
-                                ? Icons.visibility
-                                : Icons.visibility_off,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  SizedBox(height: 10),
-                  Text(
-                    "Training",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontFamily: "StageGrotesk_Regular",
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  SizedBox(
-                    width: double.infinity,
-                    // height: 65,
-                    child: DropdownButtonFormField<Datum>(
-                      decoration: InputDecoration(border: OutlineInputBorder()),
-                      value: selectedTraining,
-                      hint: Text(
-                        "Pilih Training",
-                        style: TextStyle(fontFamily: "StageGrotesk_Regular"),
-                      ),
-                      items:
-                          trainingList?.map((Datum training) {
-                            return DropdownMenuItem<Datum>(
-                              value: training,
-                              child: Text(training.title ?? ''),
-                            );
-                          }).toList() ??
-                          [],
-                      onChanged: (value) {
-                        setState(() {
-                          selectedTraining = value;
-                        });
-                      },
-                    ),
-                  ),
-                  SizedBox(
-                    width: double.infinity,
-                    // height: 65,
-                    child: DropdownButtonFormField<Batch>(
-                      decoration: InputDecoration(border: OutlineInputBorder()),
-                      value: selectedBatches,
-                      hint: Text(
-                        "Pilih Training",
-                        style: TextStyle(fontFamily: "StageGrotesk_Regular"),
-                      ),
-                      items:
-                          batchList?.map((Batch batch) {
-                            return DropdownMenuItem<Batch>(
-                              value: batch,
-                              child: Text((batch.batchKe ?? '')),
-                            );
-                          }).toList() ??
-                          [],
-                      onChanged: (value) {
-                        setState(() {
-                          selectedBatches = value;
-                        });
-                      },
-                    ),
-                  ),
-                  SizedBox(height: 20),
-                  SizedBox(
-                    height: 56,
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: isLoading ? null : _register,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFF1E3A8A),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: isLoading
-                          ? CircularProgressIndicator(color: Colors.white)
-                          : Text(
-                              "Daftar",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontFamily: "StageGrotesk_Bold",
-                              ),
-                            ),
-                    ),
-                  ),
-                  SizedBox(height: 20),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 100),
-                    child: Text.rich(
-                      TextSpan(
-                        text: "Sudah punya akun? ",
-                        style: TextStyle(
-                          color: const Color.fromARGB(182, 100, 100, 106),
-                          fontFamily: "StageGrotesk_Regular",
-                          fontWeight: FontWeight.w400,
-                        ),
-                        children: [
-                          TextSpan(
-                            recognizer: TapGestureRecognizer()
-                              ..onTap = () {
-                                context.push(LoginScreen());
-                              },
-                            text: " Masuk",
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: const Color.fromARGB(255, 11, 39, 164),
-                              fontFamily: "StageGrotesk_Bold",
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 20),
-                ],
+              SizedBox(height: 32),
+              Padding(
+                padding: const EdgeInsets.only(right: 310),
+                child: Text("Nama", style: TextStyle(fontFamily: "StageGrotesk_Medium", fontSize: 16),),
               ),
-            ),
-          ],
+              SizedBox(height: 10,),
+              TextField(
+                controller: nameController,
+                decoration: _inputDecoration("Masukkan Nama"),
+              ),
+              SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.only(right: 310),
+                child: Text("Email", style: TextStyle(fontFamily: "StageGrotesk_Medium", fontSize: 16),),
+              ),
+              SizedBox(height: 10,),
+              TextField(
+                controller: emailController,
+                decoration: _inputDecoration("Masukkan Email"),
+              ),
+              SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.only(right: 280),
+                child: Text("Password", style: TextStyle(fontFamily: "StageGrotesk_Medium", fontSize: 16),),
+              ),
+              SizedBox(height: 10),
+              TextField(
+                controller: passController,
+                obscureText: hidePassword,
+                decoration: _inputDecoration("Masukkan Password").copyWith(
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      hidePassword ? Icons.visibility_off : Icons.visibility,
+                      color: Colors.grey,
+                    ),
+                    onPressed: () =>
+                        setState(() => hidePassword = !hidePassword),
+                  ),
+                ),
+              ),
+              SizedBox(height: 16,),
+              Padding(
+                padding: const EdgeInsets.only(right: 250),
+                child: Text("Jenis Kelamin", style: TextStyle(fontFamily: "StageGrotesk_Medium", fontSize: 16),),
+              ),
+              SizedBox(height: 10),
+              DropdownButtonFormField<String>(
+                value: selectedGender,
+                items: genderList
+                    .map((g) => DropdownMenuItem(value: g, child: Text(g)))
+                    .toList(),
+                onChanged: (val) => setState(() => selectedGender = val),
+                decoration: _inputDecoration("Pilih Jenis Kelamin"),
+              ),
+              SizedBox(height: 16,),
+              Padding(
+                padding: const EdgeInsets.only(right: 275),
+                child: Text("Pilih Batch", style: TextStyle(fontFamily: "StageGrotesk_Medium", fontSize: 16),),
+              ),
+              SizedBox(height: 10),
+              DropdownButtonFormField<Batches>(
+                value: selectedBatch,
+                items: batchList
+                    .map(
+                      (b) => DropdownMenuItem(
+                        value: b,
+                        child: Text(b.batchKe ?? "Batch ${b.id}"),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (val) => setState(() => selectedBatch = val),
+                decoration: _inputDecoration("Pilih Batch"),
+              ),
+              SizedBox(height: 16,),
+              Padding(
+                padding: const EdgeInsets.only(right: 250),
+                child: Text("Pilih Pelatihan", style: TextStyle(fontFamily: "StageGrotesk_Medium", fontSize: 16),),
+              ),
+              SizedBox(height: 10),
+              DropdownButtonFormField<Datum>(
+                value: selectedTraining,
+                items: trainingList
+                    .map(
+                      (t) => DropdownMenuItem(
+                        value: t,
+                        child: SizedBox(
+                          width: 220,
+                          child: Text(
+                            t.title ?? "Pelatihan ${t.id}",
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
+                        ),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (val) => setState(() => selectedTraining = val),
+                decoration: _inputDecoration("Pilih Pelatihan"),
+              ),
+              SizedBox(height: 32),
+              ElevatedButton(
+                onPressed: isLoading ? null : registerUser,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF1E3A8A),
+                  minimumSize: Size(double.infinity, 50),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: isLoading
+                    ? CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      )
+                    : Text(
+                        "Buat Akun",
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.white,
+                          fontFamily: "StageGrotesk_Bold",
+                        ),
+                      ),
+              ),
+              SizedBox(height: 16),
+              Text(
+                "Sudah punya akun?",
+                style: TextStyle(fontFamily: "StageGrotesk_Regular"),
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  context.pushNamed(LoginScreen.id);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF1E3A8A),
+                  minimumSize: Size(double.infinity, 50),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: isLoading
+                    ? CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      )
+                    : Text(
+                        "Masuk",
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.white,
+                          fontFamily: "StageGrotesk_Bold",
+                        ),
+                      ),
+              ),
+            ],
+          ),
         ),
+      ),
+    );
+  }
+
+  InputDecoration _inputDecoration(String hint) {
+    return InputDecoration(
+      contentPadding: const EdgeInsets.symmetric(
+        vertical: 10, 
+        horizontal: 16,
+      ),
+      hintText: hint,
+      hintStyle: TextStyle(fontFamily: "StageGrotesk_Regular", fontSize: 16),
+      filled: true,
+      fillColor: Colors.white,
+      border: OutlineInputBorder(
+        borderSide: BorderSide(width: 2),
+        borderRadius: BorderRadius.circular(10),
       ),
     );
   }

@@ -12,7 +12,7 @@ String getBatchesModelToJson(GetBatchesModel data) =>
 
 class GetBatchesModel {
   String? message;
-  List<Batch>? data;
+  List<Batches>? data;
 
   GetBatchesModel({this.message, this.data});
 
@@ -21,7 +21,7 @@ class GetBatchesModel {
         message: json["message"],
         data: json["data"] == null
             ? []
-            : List<Batch>.from(json["data"]!.map((x) => Batch.fromJson(x))),
+            : List<Batches>.from(json["data"]!.map((x) => Batches.fromJson(x))),
       );
 
   Map<String, dynamic> toJson() => {
@@ -32,7 +32,7 @@ class GetBatchesModel {
   };
 }
 
-class Batch {
+class Batches {
   int? id;
   String? batchKe;
   DateTime? startDate;
@@ -41,7 +41,7 @@ class Batch {
   DateTime? updatedAt;
   List<Training>? trainings;
 
-  Batch({
+  Batches({
     this.id,
     this.batchKe,
     this.startDate,
@@ -51,7 +51,7 @@ class Batch {
     this.trainings,
   });
 
-  factory Batch.fromJson(Map<String, dynamic> json) => Batch(
+  factory Batches.fromJson(Map<String, dynamic> json) => Batches(
     id: json["id"],
     batchKe: json["batch_ke"],
     startDate: json["start_date"] == null

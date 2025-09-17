@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:absensi_apps/api/endpoint/endpoint.dart';
 import 'package:absensi_apps/models/get_batches_model.dart';
@@ -12,24 +13,48 @@ import 'package:http/http.dart' as http;
 
 class AuthenticationAPI {
   static Future<RegisterModel> registerUser({
+    required String name,
     required String email,
     required String password,
-    required String name,
+    required String jenisKelamin,
+    required File profilePhoto,
+    required int batchId,
+    required int trainingId,
   }) async {
     final url = Uri.parse(Endpoint.register);
+
+    // baca file -> bytes -> base64
+    final readImage = profilePhoto.readAsBytesSync();
+    final b64 = base64Encode(readImage);
+
+    // tambahkan prefix agar dikenali backend
+    final imageWithPrefix = "data:image/png;base64,$b64";
+
     final response = await http.post(
       url,
-      body: {"name": name, "email": email, "password": password},
-      headers: {"Accept": "application/json"},
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode({
+        "name": name,
+        "email": email,
+        "password": password,
+        "jenis_kelamin": jenisKelamin,
+        "profile_photo": imageWithPrefix,
+        "batch_id": batchId,
+        "training_id": trainingId,
+      }),
     );
 
-    print("Register Response: ${response.body}");
+    print("STATUS: ${response.statusCode}");
+    print("BODY: ${response.body}");
 
     if (response.statusCode == 200) {
       return RegisterModel.fromJson(json.decode(response.body));
     } else {
       final error = json.decode(response.body);
-      throw Exception(error["message"] ?? "Register gagal");
+      throw Exception(error["message"] ?? "Failed to Register");
     }
   }
 
