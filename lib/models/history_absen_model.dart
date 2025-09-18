@@ -1,28 +1,26 @@
 // To parse this JSON data, do
 //
-//     final getHistoryModel = getHistoryModelFromJson(jsonString);
+//     final historyModel = historyModelFromJson(jsonString);
 
 import 'dart:convert';
 
-GetHistoryModel getHistoryModelFromJson(String str) =>
-    GetHistoryModel.fromJson(json.decode(str));
+HistoryModel historyModelFromJson(String str) =>
+    HistoryModel.fromJson(json.decode(str));
 
-String getHistoryModelToJson(GetHistoryModel data) =>
-    json.encode(data.toJson());
+String historyModelToJson(HistoryModel data) => json.encode(data.toJson());
 
-class GetHistoryModel {
+class HistoryModel {
   String? message;
   List<Datum>? data;
 
-  GetHistoryModel({this.message, this.data});
+  HistoryModel({this.message, this.data});
 
-  factory GetHistoryModel.fromJson(Map<String, dynamic> json) =>
-      GetHistoryModel(
-        message: json["message"],
-        data: json["data"] == null
-            ? []
-            : List<Datum>.from(json["data"]!.map((x) => Datum.fromJson(x))),
-      );
+  factory HistoryModel.fromJson(Map<String, dynamic> json) => HistoryModel(
+    message: json["message"],
+    data: json["data"] == null
+        ? []
+        : List<Datum>.from(json["data"]!.map((x) => Datum.fromJson(x))),
+  );
 
   Map<String, dynamic> toJson() => {
     "message": message,
@@ -36,15 +34,15 @@ class Datum {
   int? id;
   DateTime? attendanceDate;
   String? checkInTime;
-  dynamic checkOutTime;
+  String? checkOutTime;
   double? checkInLat;
   double? checkInLng;
-  dynamic checkOutLat;
-  dynamic checkOutLng;
+  double? checkOutLat;
+  double? checkOutLng;
   String? checkInAddress;
-  dynamic checkOutAddress;
+  String? checkOutAddress;
   String? checkInLocation;
-  dynamic checkOutLocation;
+  String? checkOutLocation;
   String? status;
   String? alasanIzin;
 
@@ -74,8 +72,8 @@ class Datum {
     checkOutTime: json["check_out_time"],
     checkInLat: json["check_in_lat"]?.toDouble(),
     checkInLng: json["check_in_lng"]?.toDouble(),
-    checkOutLat: json["check_out_lat"],
-    checkOutLng: json["check_out_lng"],
+    checkOutLat: json["check_out_lat"]?.toDouble(),
+    checkOutLng: json["check_out_lng"]?.toDouble(),
     checkInAddress: json["check_in_address"],
     checkOutAddress: json["check_out_address"],
     checkInLocation: json["check_in_location"],

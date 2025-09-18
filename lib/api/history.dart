@@ -6,7 +6,7 @@ import 'package:absensi_apps/shared_preferences.dart/shared_preference.dart';
 import 'package:http/http.dart' as http;
 
 class HistoryAPI {
-  static Future<GetHistoryModel> getHistory() async {
+  static Future<HistoryModel> getHistory() async {
     final url = Uri.parse(Endpoint.history);
     final token = await PreferenceHandler.getToken();
 
@@ -18,7 +18,7 @@ class HistoryAPI {
     print("Profile Status: ${response.statusCode}");
 
     if (response.statusCode == 200) {
-      return GetHistoryModel.fromJson(json.decode(response.body));
+      return HistoryModel.fromJson(json.decode(response.body));
     } else {
       final error = json.decode(response.body);
       print(error);

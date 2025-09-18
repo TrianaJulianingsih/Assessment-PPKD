@@ -18,7 +18,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   GetProfileModel? user;
-  GetHistoryModel? history;
+  HistoryModel? history;
   String? errorMessage;
   bool isLoading = true;
   bool isLoadingHistory = true;

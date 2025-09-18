@@ -49,7 +49,7 @@ class AttendanceAPI {
   }) async {
     final url = Uri.parse(Endpoint.checkOut);
     final token = await PreferenceHandler.getToken();
-    
+
     final now = DateTime.now();
     final attendanceDate = DateFormat('yyyy-MM-dd').format(now);
     final checkOutTime = DateFormat('HH:mm').format(now);
@@ -63,10 +63,7 @@ class AttendanceAPI {
         'check_out_lng': lng.toString(),
         'check_out_address': address,
       },
-      headers: {
-        "Accept": "application/json",
-        "Authorization": "Bearer $token"
-      },
+      headers: {"Accept": "application/json", "Authorization": "Bearer $token"},
     );
 
     print("Check-Out Status: ${response.statusCode}");
@@ -77,14 +74,16 @@ class AttendanceAPI {
     } else {
       final error = json.decode(response.body);
       final errorMessage = error["message"] ?? "Gagal melakukan check-out";
-      
+
       // Parse error details jika ada
       if (error["errors"] != null) {
         final errors = error["errors"] as Map<String, dynamic>;
-        final errorDetails = errors.entries.map((e) => "${e.value[0]}").join(", ");
+        final errorDetails = errors.entries
+            .map((e) => "${e.value[0]}")
+            .join(", ");
         throw Exception("$errorMessage: $errorDetails");
       }
-      
+
       throw Exception(errorMessage);
     }
   }

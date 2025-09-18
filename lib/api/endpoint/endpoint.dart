@@ -12,6 +12,7 @@ class Endpoint {
       "$baseURL/api/absen/stats?start=$start&end=$end";
   static const String deleteAbsen = "$baseURL/api/absen/today?attendance_date";
   static const String profile = "$baseURL/api/profile";
+  static const String editProfilePhoto = "$baseURL/api/profile/photo";
   static const String training = "$baseURL/api/trainings";
   static const String batches = "$baseURL/api/batches";
   static const String history = "$baseURL/api/absen/history";

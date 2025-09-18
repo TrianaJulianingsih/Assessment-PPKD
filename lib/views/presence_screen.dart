@@ -74,7 +74,7 @@ class _PresenceScreenState extends State<PresenceScreen> {
     try {
       final checkInTime = await PreferenceHandler.getCheckInTime();
       final hasCheckedIn = await PreferenceHandler.getCheckInStatus();
-      
+
       setState(() {
         _checkInTime = checkInTime ?? "-";
         _hasCheckedIn = hasCheckedIn;
@@ -150,9 +150,12 @@ class _PresenceScreenState extends State<PresenceScreen> {
       Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
-      
+
       // Dapatkan alamat yang lebih detail
-      String address = await _getDetailedAddress(position.latitude, position.longitude);
+      String address = await _getDetailedAddress(
+        position.latitude,
+        position.longitude,
+      );
 
       setState(() {
         _currentPosition = LatLng(position.latitude, position.longitude);
@@ -185,10 +188,10 @@ class _PresenceScreenState extends State<PresenceScreen> {
 
       if (placemarks.isNotEmpty) {
         Placemark place = placemarks[0];
-        
+
         // Format alamat yang lebih baik
         List<String> addressParts = [];
-        
+
         if (place.street != null && place.street!.isNotEmpty) {
           addressParts.add(place.street!);
         }
@@ -198,14 +201,17 @@ class _PresenceScreenState extends State<PresenceScreen> {
         if (place.locality != null && place.locality!.isNotEmpty) {
           addressParts.add(place.locality!);
         }
-        if (place.administrativeArea != null && place.administrativeArea!.isNotEmpty) {
+        if (place.administrativeArea != null &&
+            place.administrativeArea!.isNotEmpty) {
           addressParts.add(place.administrativeArea!);
         }
         if (place.postalCode != null && place.postalCode!.isNotEmpty) {
           addressParts.add(place.postalCode!);
         }
-        
-        return addressParts.isNotEmpty ? addressParts.join(", ") : "Alamat tidak tersedia";
+
+        return addressParts.isNotEmpty
+            ? addressParts.join(", ")
+            : "Alamat tidak tersedia";
       }
       return "Alamat tidak tersedia";
     } catch (e) {
@@ -236,7 +242,7 @@ class _PresenceScreenState extends State<PresenceScreen> {
       );
 
       final checkInTime = DateFormat('HH:mm', 'id_ID').format(DateTime.now());
-      
+
       // Simpan data check-in ke shared preferences
       await PreferenceHandler.setCheckInTime(checkInTime);
       await PreferenceHandler.setCheckInStatus(true);
@@ -275,9 +281,9 @@ class _PresenceScreenState extends State<PresenceScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(response.message ?? "Check-out berhasil")),
       );
-      
+
       final checkOutTime = DateFormat('HH:mm', 'id_ID').format(DateTime.now());
-      
+
       // Hapus data check-in dari shared preferences setelah check-out
       await PreferenceHandler.clearCheckInData();
 
@@ -333,7 +339,7 @@ class _PresenceScreenState extends State<PresenceScreen> {
                         });
                       },
                     );
-                  }).toList(),
+                  }),
                 ],
               ),
               actions: [
@@ -489,7 +495,11 @@ class _PresenceScreenState extends State<PresenceScreen> {
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.only(left: 15, top: 10, right: 15),
+                    padding: const EdgeInsets.only(
+                      left: 15,
+                      top: 10,
+                      right: 15,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -661,7 +671,7 @@ class _PresenceScreenState extends State<PresenceScreen> {
                             ? null
                             : () => _showRandomQuestionDialog('checkout'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.orange,
+                          backgroundColor: Colors.greenAccent,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),

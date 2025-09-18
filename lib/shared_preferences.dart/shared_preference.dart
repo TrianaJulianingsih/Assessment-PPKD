@@ -44,6 +44,11 @@ class PreferenceHandler {
     return prefs.getString(userEmailKey);
   }
 
+  static Future<void> setUserEmail(String userEmail) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(userNameKey, userEmail);
+  }
+
   static Future<String?> getUserName() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(userNameKey);
@@ -84,6 +89,28 @@ class PreferenceHandler {
   static Future<bool> getCheckInStatus() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool('has_checked_in') ?? false;
+  }
+
+  // Tambahkan method berikut di class PreferenceHandler
+
+  static Future<void> setCheckOutTime(String time) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('checkOutTime', time);
+  }
+
+  static Future<String?> getCheckOutTime() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('checkOutTime');
+  }
+
+  static Future<void> setCheckOutStatus(bool status) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('hasCheckedOut', status);
+  }
+
+  static Future<bool> getCheckOutStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('hasCheckedOut') ?? false;
   }
 
   static Future<void> clearCheckInData() async {
