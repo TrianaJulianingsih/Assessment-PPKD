@@ -40,6 +40,7 @@ dependencies:
   lottie: ^3.3.1
   persistent_bottom_nav_bar_v2: ^6.1.0
   shared_preferences: ^2.5.3
+  flutter_launcher_icons: ^0.14.4
   flutter_localizations:
     sdk: flutter
 
@@ -47,6 +48,11 @@ dev_dependencies:
   flutter_lints: ^5.0.0
   flutter_test:
     sdk: flutter
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/Kelas Hadir Logo.png"
+  min_sdk_android: 21
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

@@ -85,7 +85,7 @@ class ProfileScreen extends StatelessWidget {
                 icon: Icons.logout,
                 title: "Logout",
                 onTap: () {
-                  context.pushNamed(LoginScreen.id);
+                  Navigator.pushReplacementNamed(context, LoginScreen.id);
                 },
                 color: Colors.red,
               ),

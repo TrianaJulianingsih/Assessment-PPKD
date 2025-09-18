@@ -1,6 +1,7 @@
 import 'package:absensi_apps/api/attendance.dart';
 import 'package:absensi_apps/api/profile.dart';
 import 'package:absensi_apps/models/get_profile_model.dart';
+import 'package:absensi_apps/shared_preferences.dart/shared_preference.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
@@ -63,8 +64,25 @@ class _PresenceScreenState extends State<PresenceScreen> {
   @override
   void initState() {
     super.initState();
+    _loadCheckInData();
     _loadUserData();
     _getCurrentLocation();
+  }
+
+  // Memuat data check-in dari shared preferences
+  void _loadCheckInData() async {
+    try {
+      final checkInTime = await PreferenceHandler.getCheckInTime();
+      final hasCheckedIn = await PreferenceHandler.getCheckInStatus();
+      
+      setState(() {
+        _checkInTime = checkInTime ?? "-";
+        _hasCheckedIn = hasCheckedIn;
+        _status = _hasCheckedIn ? "Sudah Check-In" : "Belum Absen";
+      });
+    } catch (e) {
+      print("Error loading check-in data: $e");
+    }
   }
 
   void _loadUserData() async {
@@ -132,22 +150,9 @@ class _PresenceScreenState extends State<PresenceScreen> {
       Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
-      String address = "Alamat tidak tersedia";
-      try {
-        List<Placemark> placemarks = await placemarkFromCoordinates(
-          position.latitude,
-          position.longitude,
-        );
-
-        if (placemarks.isNotEmpty) {
-          Placemark place = placemarks[0];
-          address =
-              "${place.street}, ${place.locality}, ${place.administrativeArea}";
-        }
-      } catch (e) {
-        print("Error getting address: $e");
-        address = "Koordinat: ${position.latitude}, ${position.longitude}";
-      }
+      
+      // Dapatkan alamat yang lebih detail
+      String address = await _getDetailedAddress(position.latitude, position.longitude);
 
       setState(() {
         _currentPosition = LatLng(position.latitude, position.longitude);
@@ -173,6 +178,42 @@ class _PresenceScreenState extends State<PresenceScreen> {
     }
   }
 
+  // Fungsi untuk mendapatkan alamat yang lebih detail
+  Future<String> _getDetailedAddress(double lat, double lng) async {
+    try {
+      List<Placemark> placemarks = await placemarkFromCoordinates(lat, lng);
+
+      if (placemarks.isNotEmpty) {
+        Placemark place = placemarks[0];
+        
+        // Format alamat yang lebih baik
+        List<String> addressParts = [];
+        
+        if (place.street != null && place.street!.isNotEmpty) {
+          addressParts.add(place.street!);
+        }
+        if (place.subLocality != null && place.subLocality!.isNotEmpty) {
+          addressParts.add(place.subLocality!);
+        }
+        if (place.locality != null && place.locality!.isNotEmpty) {
+          addressParts.add(place.locality!);
+        }
+        if (place.administrativeArea != null && place.administrativeArea!.isNotEmpty) {
+          addressParts.add(place.administrativeArea!);
+        }
+        if (place.postalCode != null && place.postalCode!.isNotEmpty) {
+          addressParts.add(place.postalCode!);
+        }
+        
+        return addressParts.isNotEmpty ? addressParts.join(", ") : "Alamat tidak tersedia";
+      }
+      return "Alamat tidak tersedia";
+    } catch (e) {
+      print("Error getting detailed address: $e");
+      return "Koordinat: $lat, $lng";
+    }
+  }
+
   Future<void> _doCheckIn() async {
     if (_currentPosition == null) {
       ScaffoldMessenger.of(
@@ -194,8 +235,14 @@ class _PresenceScreenState extends State<PresenceScreen> {
         SnackBar(content: Text(response.message ?? "Check-in berhasil")),
       );
 
+      final checkInTime = DateFormat('HH:mm', 'id_ID').format(DateTime.now());
+      
+      // Simpan data check-in ke shared preferences
+      await PreferenceHandler.setCheckInTime(checkInTime);
+      await PreferenceHandler.setCheckInStatus(true);
+
       setState(() {
-        _checkInTime = DateFormat('HH:mm', 'id_ID').format(DateTime.now());
+        _checkInTime = checkInTime;
         _status = "Sudah Check-In";
         _hasCheckedIn = true;
       });
@@ -228,10 +275,17 @@ class _PresenceScreenState extends State<PresenceScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(response.message ?? "Check-out berhasil")),
       );
+      
+      final checkOutTime = DateFormat('HH:mm', 'id_ID').format(DateTime.now());
+      
+      // Hapus data check-in dari shared preferences setelah check-out
+      await PreferenceHandler.clearCheckInData();
+
       setState(() {
-        _checkOutTime = DateFormat('HH:mm', 'id_ID').format(DateTime.now());
+        _checkOutTime = checkOutTime;
         _status = "Sudah Check-Out";
         _hasCheckedIn = false;
+        _checkInTime = "-"; // Reset check-in time
       });
     } catch (e) {
       ScaffoldMessenger.of(
@@ -279,7 +333,7 @@ class _PresenceScreenState extends State<PresenceScreen> {
                         });
                       },
                     );
-                  }),
+                  }).toList(),
                 ],
               ),
               actions: [
@@ -318,37 +372,6 @@ class _PresenceScreenState extends State<PresenceScreen> {
         );
       },
     );
-  }
-
-  void _showAttendanceDialog() {
-    if (_hasCheckedIn) {
-      // Jika sudah check-in, langsung check-out
-      _showRandomQuestionDialog('checkout');
-    } else {
-      // Jika belum check-in, tampilkan pilihan
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text("Pilih Jenis Absen"),
-            content: Text("Silakan pilih jenis absen yang ingin dilakukan"),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _showRandomQuestionDialog('checkin');
-                },
-                child: Text("Check-In"),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text("Batal"),
-              ),
-            ],
-          );
-        },
-      );
-    }
   }
 
   Widget _buildMap() {
@@ -414,206 +437,251 @@ class _PresenceScreenState extends State<PresenceScreen> {
       ),
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(
-                  height: 300,
-                  width: double.infinity,
-                  child: _buildMap(),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(15),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "Latitude : $_latitude",
-                        style: TextStyle(
-                          fontFamily: "StageGrotesk_Regular",
-                          fontSize: 16,
-                        ),
-                      ),
-                      Text(
-                        "Longitude : $_longitude",
-                        style: TextStyle(
-                          fontFamily: "StageGrotesk_Regular",
-                          fontSize: 16,
-                        ),
-                      ),
-                    ],
+          : SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    height: 300,
+                    width: double.infinity,
+                    child: _buildMap(),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 15),
-                  child: Text(
-                    "Nama : ${_userProfile?.data?.name ?? 'Loading...'}",
-                    style: TextStyle(
-                      fontFamily: "StageGrotesk_Medium",
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 15),
-                  child: Text(
-                    "Status : $_status",
-                    style: TextStyle(
-                      fontFamily: "StageGrotesk_Medium",
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 15, top: 10),
-                  child: Text(
-                    "Alamat : $_address",
-                    style: TextStyle(
-                      fontFamily: "StageGrotesk_Regular",
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-                SizedBox(height: 30),
-                Center(
-                  child: Container(
-                    width: 370,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(30),
-                      border: Border.all(
-                        color: const Color.fromARGB(180, 202, 200, 200),
-                      ),
-                      color: Colors.white,
-                    ),
-                    child: Column(
+                  Padding(
+                    padding: const EdgeInsets.all(15),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Padding(
-                          padding: const EdgeInsets.only(top: 10),
-                          child: Text(
-                            "Keterangan Kehadiran Hari Ini",
-                            style: TextStyle(
-                              fontFamily: "StageGrotesk_Bold",
-                              fontSize: 16,
-                            ),
+                        Text(
+                          "Latitude : $_latitude",
+                          style: TextStyle(
+                            fontFamily: "StageGrotesk_Regular",
+                            fontSize: 16,
                           ),
                         ),
-                        Padding(
-                          padding: const EdgeInsets.all(20),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    DateFormat(
-                                      'EEEE',
-                                      'id_ID',
-                                    ).format(DateTime.now()),
-                                    style: TextStyle(
-                                      fontFamily: "StageGrotesk_Regular",
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                  Text(
-                                    DateFormat(
-                                      'dd MMM yy',
-                                      'id_ID',
-                                    ).format(DateTime.now()),
-                                    style: TextStyle(
-                                      fontFamily: "StageGrotesk_Regular",
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    "Check In",
-                                    style: TextStyle(
-                                      fontFamily: "StageGrotesk_Regular",
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                  Text(
-                                    _checkInTime,
-                                    style: TextStyle(
-                                      fontFamily: "StageGrotesk_Regular",
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                      color: _checkInTime != "-"
-                                          ? Colors.green
-                                          : Colors.black,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    "Check Out",
-                                    style: TextStyle(
-                                      fontFamily: "StageGrotesk_Regular",
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                  Text(
-                                    _checkOutTime,
-                                    style: TextStyle(
-                                      fontFamily: "StageGrotesk_Regular",
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                      color: _checkOutTime != "-"
-                                          ? Colors.green
-                                          : Colors.black,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
+                        Text(
+                          "Longitude : $_longitude",
+                          style: TextStyle(
+                            fontFamily: "StageGrotesk_Regular",
+                            fontSize: 16,
                           ),
                         ),
                       ],
                     ),
                   ),
-                ),
-                SizedBox(height: 40),
-                Center(
-                  child: SizedBox(
-                    width: 360,
-                    height: 60,
-                    child: ElevatedButton(
-                      onPressed: _isCheckingLocation
-                          ? null
-                          : _showAttendanceDialog,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _hasCheckedIn
-                            ? Colors.orange
-                            : Color(0xFF10B981),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 15),
+                    child: Text(
+                      "Nama : ${_userProfile?.data?.name ?? 'Loading...'}",
+                      style: TextStyle(
+                        fontFamily: "StageGrotesk_Medium",
+                        fontSize: 16,
                       ),
-                      child: _isCheckingLocation
-                          ? CircularProgressIndicator(color: Colors.white)
-                          : Text(
-                              _hasCheckedIn
-                                  ? "Check-Out Sekarang"
-                                  : "Check-In Sekarang",
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 15),
+                    child: Text(
+                      "Status : $_status",
+                      style: TextStyle(
+                        fontFamily: "StageGrotesk_Medium",
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 15, top: 10, right: 15),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Alamat :",
+                          style: TextStyle(
+                            fontFamily: "StageGrotesk_Regular",
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: 5),
+                        Text(
+                          _address,
+                          style: TextStyle(
+                            fontFamily: "StageGrotesk_Regular",
+                            fontSize: 16,
+                          ),
+                          textAlign: TextAlign.left,
+                          softWrap: true,
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 30),
+                  Center(
+                    child: Container(
+                      width: 370,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(30),
+                        border: Border.all(
+                          color: const Color.fromARGB(180, 202, 200, 200),
+                        ),
+                        color: Colors.white,
+                      ),
+                      child: Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(top: 10),
+                            child: Text(
+                              "Keterangan Kehadiran Hari Ini",
                               style: TextStyle(
-                                color: Colors.white,
                                 fontFamily: "StageGrotesk_Bold",
                                 fontSize: 16,
                               ),
                             ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(20),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      DateFormat(
+                                        'EEEE',
+                                        'id_ID',
+                                      ).format(DateTime.now()),
+                                      style: TextStyle(
+                                        fontFamily: "StageGrotesk_Regular",
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    Text(
+                                      DateFormat(
+                                        'dd MMM yy',
+                                        'id_ID',
+                                      ).format(DateTime.now()),
+                                      style: TextStyle(
+                                        fontFamily: "StageGrotesk_Regular",
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      "Check In",
+                                      style: TextStyle(
+                                        fontFamily: "StageGrotesk_Regular",
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    Text(
+                                      _checkInTime,
+                                      style: TextStyle(
+                                        fontFamily: "StageGrotesk_Regular",
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: _checkInTime != "-"
+                                            ? Colors.green
+                                            : Colors.black,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      "Check Out",
+                                      style: TextStyle(
+                                        fontFamily: "StageGrotesk_Regular",
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    Text(
+                                      _checkOutTime,
+                                      style: TextStyle(
+                                        fontFamily: "StageGrotesk_Regular",
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: _checkOutTime != "-"
+                                            ? Colors.green
+                                            : Colors.black,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                  SizedBox(height: 20),
+                  // Tombol Check-In
+                  Center(
+                    child: SizedBox(
+                      width: 360,
+                      height: 60,
+                      child: ElevatedButton(
+                        onPressed: _isCheckingLocation || _hasCheckedIn
+                            ? null
+                            : () => _showRandomQuestionDialog('checkin'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color(0xFF10B981),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: _isCheckingLocation
+                            ? CircularProgressIndicator(color: Colors.white)
+                            : Text(
+                                "Check-In Sekarang",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontFamily: "StageGrotesk_Bold",
+                                  fontSize: 16,
+                                ),
+                              ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 15),
+                  // Tombol Check-Out
+                  Center(
+                    child: SizedBox(
+                      width: 360,
+                      height: 60,
+                      child: ElevatedButton(
+                        onPressed: _isCheckingLocation || !_hasCheckedIn
+                            ? null
+                            : () => _showRandomQuestionDialog('checkout'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.orange,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: _isCheckingLocation
+                            ? CircularProgressIndicator(color: Colors.white)
+                            : Text(
+                                "Check-Out Sekarang",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontFamily: "StageGrotesk_Bold",
+                                  fontSize: 16,
+                                ),
+                              ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 40),
+                ],
+              ),
             ),
     );
   }

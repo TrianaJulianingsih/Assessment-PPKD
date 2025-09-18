@@ -64,6 +64,34 @@ class PreferenceHandler {
     await prefs.setString(batchKey, batch);
   }
 
+  // Di file PreferenceHandler.dart tambahkan method berikut:
+
+  static Future<void> setCheckInTime(String checkInTime) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('check_in_time', checkInTime);
+  }
+
+  static Future<String?> getCheckInTime() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('check_in_time');
+  }
+
+  static Future<void> setCheckInStatus(bool hasCheckedIn) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('has_checked_in', hasCheckedIn);
+  }
+
+  static Future<bool> getCheckInStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('has_checked_in') ?? false;
+  }
+
+  static Future<void> clearCheckInData() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('check_in_time');
+    await prefs.remove('has_checked_in');
+  }
+
   static Future<bool?> getLoginStatus() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(loginKey);
@@ -75,11 +103,17 @@ class PreferenceHandler {
   }
 
   static Future<void> logout() async {
+    // final prefs = await SharedPreferences.getInstance();
+    // await prefs.remove(tokenKey);
+    // await prefs.remove(userIdKey);
+    // await prefs.remove(userEmailKey);
+    // await prefs.remove(userNameKey);
+    // await prefs.setBool(loginKey, false);
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(tokenKey);
-    await prefs.remove(userIdKey);
-    await prefs.remove(userEmailKey);
-    await prefs.remove(userNameKey);
-    await prefs.setBool(loginKey, false);
+    await prefs.remove('token');
+    await prefs.remove('user_id');
+    await prefs.remove('user_email');
+    await prefs.remove('user_name');
+    await prefs.setBool('login', false);
   }
 }
