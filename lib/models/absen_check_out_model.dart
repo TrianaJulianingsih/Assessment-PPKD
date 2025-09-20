@@ -10,7 +10,7 @@ String absenCheckOutModelToJson(AbsenCheckOutModel data) => json.encode(data.toJ
 
 class AbsenCheckOutModel {
     String? message;
-    Data? data;
+    CheckOutData? data;
 
     AbsenCheckOutModel({
         this.message,
@@ -19,7 +19,7 @@ class AbsenCheckOutModel {
 
     factory AbsenCheckOutModel.fromJson(Map<String, dynamic> json) => AbsenCheckOutModel(
         message: json["message"],
-        data: json["data"] == null ? null : Data.fromJson(json["data"]),
+        data: json["data"] == null ? null : CheckOutData.fromJson(json["data"]),
     );
 
     Map<String, dynamic> toJson() => {
@@ -28,7 +28,7 @@ class AbsenCheckOutModel {
     };
 }
 
-class Data {
+class CheckOutData {
     int? id;
     DateTime? attendanceDate;
     String? checkInTime;
@@ -40,7 +40,7 @@ class Data {
     String? status;
     dynamic alasanIzin;
 
-    Data({
+    CheckOutData({
         this.id,
         this.attendanceDate,
         this.checkInTime,
@@ -53,7 +53,7 @@ class Data {
         this.alasanIzin,
     });
 
-    factory Data.fromJson(Map<String, dynamic> json) => Data(
+    factory CheckOutData.fromJson(Map<String, dynamic> json) => CheckOutData(
         id: json["id"],
         attendanceDate: json["attendance_date"] == null ? null : DateTime.parse(json["attendance_date"]),
         checkInTime: json["check_in_time"],

@@ -12,20 +12,20 @@ String absenCheckInModelToJson(AbsenCheckInModel data) =>
 
 class AbsenCheckInModel {
   String? message;
-  Data? data;
+  CheckInData? data;
 
   AbsenCheckInModel({this.message, this.data});
 
   factory AbsenCheckInModel.fromJson(Map<String, dynamic> json) =>
       AbsenCheckInModel(
         message: json["message"],
-        data: json["data"] == null ? null : Data.fromJson(json["data"]),
+        data: json["data"] == null ? null : CheckInData.fromJson(json["data"]),
       );
 
   Map<String, dynamic> toJson() => {"message": message, "data": data?.toJson()};
 }
 
-class Data {
+class CheckInData {
   int? id;
   DateTime? attendanceDate;
   String? checkInTime;
@@ -36,7 +36,7 @@ class Data {
   String? status;
   dynamic alasanIzin;
 
-  Data({
+  CheckInData({
     this.id,
     this.attendanceDate,
     this.checkInTime,
@@ -48,7 +48,7 @@ class Data {
     this.alasanIzin,
   });
 
-  factory Data.fromJson(Map<String, dynamic> json) => Data(
+  factory CheckInData.fromJson(Map<String, dynamic> json) => CheckInData(
     id: json["id"],
     attendanceDate: json["attendance_date"] == null
         ? null

@@ -1,7 +1,11 @@
+import 'dart:io';
 import 'package:absensi_apps/api/profile.dart';
+import 'package:absensi_apps/extension/navigation.dart';
 import 'package:absensi_apps/models/get_profile_model.dart';
+import 'package:absensi_apps/views/about_screen.dart';
 import 'package:absensi_apps/views/login_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -15,6 +19,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   GetProfileModel? _profile;
   bool _loading = true;
   bool _updating = false;
+  File? _selectedImage;
 
   @override
   void initState() {
@@ -31,81 +36,140 @@ class _ProfileScreenState extends State<ProfileScreen> {
       });
     } catch (e) {
       setState(() => _loading = false);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Gagal memuat profil: $e")));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Gagal memuat profil: $e")),
+        );
+      }
+    }
+  }
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+      maxWidth: 512,
+      maxHeight: 512,
+    );
+
+    if (pickedFile != null) {
+      setState(() {
+        _selectedImage = File(pickedFile.path);
+      });
+      await _uploadImage();
+    }
+  }
+
+  Future<void> _uploadImage() async {
+    if (_selectedImage == null) return;
+    
+    setState(() => _updating = true);
+    
+    try {
+      await ProfileAPI.updateProfilePhoto(image: _selectedImage);
+      await _fetchProfile();
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+           SnackBar(content: Text("Foto profil berhasil diperbarui")),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Gagal mengupload foto: $e")),
+        );
+      }
+    } finally {
+      setState(() {
+        _updating = false;
+        _selectedImage = null;
+      });
     }
   }
 
   void _editProfile() {
     final nameController = TextEditingController(text: _profile?.data?.name);
-    final emailController = TextEditingController(text: _profile?.data?.email);
 
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text("Edit Profile"),
+      builder: (context) => AlertDialog(
+        title:  Text("Edit Profile"),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: nameController,
-              decoration: const InputDecoration(labelText: "Nama"),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: emailController,
-              decoration: const InputDecoration(labelText: "Email"),
+              decoration:  InputDecoration(
+                labelText: "Nama",
+                border: OutlineInputBorder(),
+              ),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("Batal"),
+            child:  Text("Batal"),
           ),
           ElevatedButton(
             onPressed: () async {
               final name = nameController.text.trim();
-              final email = emailController.text.trim();
-              if (name.isEmpty || email.isEmpty) return;
-
-              setState(() => _updating = true);
-              Navigator.pop(context);
-              try {
-                final result = await ProfileAPI.updateProfile(
-                  name: name,
-                  email: email,
-                );
-                // Update state dengan data baru
-                setState(() {
-                  _profile = GetProfileModel(
-                    message: result.message,
-                    data: _profile?.data?.copyWith(name: name, email: email),
-                  );
-                });
+              if (name.isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Profil berhasil diperbarui")),
+                   SnackBar(content: Text("Nama tidak boleh kosong")),
                 );
-              } catch (e) {
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(SnackBar(content: Text("Gagal update: $e")));
-              } finally {
-                setState(() => _updating = false);
+                return;
               }
+
+              Navigator.pop(context);
+              await _updateName(name);
             },
-            child: const Text("Simpan"),
+            child:  Text("Simpan"),
           ),
         ],
       ),
     );
   }
 
+  Future<void> _updateName(String name) async {
+    setState(() => _updating = true);
+    try {
+      await ProfileAPI.updateProfile(name: name);
+      setState(() {
+        if (_profile != null && _profile!.data != null) {
+          _profile = GetProfileModel(
+            message: _profile!.message,
+            data: _profile!.data!.copyWith(name: name),
+          );
+        }
+      });
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+           SnackBar(content: Text("Profil berhasil diperbarui")),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Gagal update: $e")),
+        );
+      }
+    } finally {
+      setState(() => _updating = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return  Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
     }
 
     final user = _profile?.data;
@@ -113,7 +177,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: const Text(
+        title:  Text(
           "Profile",
           style: TextStyle(
             fontFamily: "StageGrotesk_Bold",
@@ -122,95 +186,144 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
         centerTitle: true,
-        backgroundColor: const Color(0xFF1E3A8A),
+        backgroundColor:  Color(0xFF1E3A8A),
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              color: Colors.white,
-              child: Column(
-                children: [
-                  CircleAvatar(
-                    radius: 45,
-                    backgroundColor: Colors.grey[300],
-                    backgroundImage: user?.profilePhotoUrl != null
-                        ? NetworkImage(user!.profilePhotoUrl!)
-                        : null,
-                    child: user?.profilePhotoUrl == null
-                        ? const Icon(Icons.person, size: 50, color: Colors.grey)
-                        : null,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    user?.name ?? "-",
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+      body: RefreshIndicator(
+        onRefresh: _fetchProfile,
+        child: SingleChildScrollView(
+          physics:  AlwaysScrollableScrollPhysics(),
+          child: Column(
+            children: [
+              Container(
+                width: double.infinity,
+                padding:  EdgeInsets.all(20),
+                color: Colors.white,
+                child: Column(
+                  children: [
+                    Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        CircleAvatar(
+                          radius: 45,
+                          backgroundColor: Colors.grey[300],
+                          backgroundImage: _getProfileImage(user),
+                          child: _getProfilePlaceholder(user),
+                        ),
+                        if (_updating)
+                           CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 3,
+                          ),
+                        if (!_updating)
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: GestureDetector(
+                              onTap: _pickImage,
+                              child: Container(
+                                padding:  EdgeInsets.all(4),
+                                decoration:  BoxDecoration(
+                                  color: Colors.blue,
+                                  shape: BoxShape.circle,
+                                ),
+                                child:  Icon(
+                                  Icons.edit,
+                                  size: 16,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    user?.email ?? "-",
-                    style: const TextStyle(fontSize: 16, color: Colors.grey),
-                  ),
-                  const SizedBox(height: 4),
-                  if (user?.trainingTitle != null)
+                     SizedBox(height: 16),
                     Text(
-                      "Training: ${user!.trainingTitle!}",
-                      style: const TextStyle(
+                      user?.name ?? "-",
+                      style:  TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                     SizedBox(height: 4),
+                    Text(
+                      user?.email ?? "-",
+                      style:  TextStyle(fontSize: 16, color: Colors.grey),
+                    ),
+                     SizedBox(height: 4),
+                    Text(
+                      user?.trainingTitle ?? "Training tidak tersedia",
+                      style:  TextStyle(
                         fontSize: 16,
                         color: Colors.black87,
                       ),
+                      textAlign: TextAlign.center,
                     ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            Container(
-              color: Colors.white,
-              child: Column(
-                children: [
-                  _buildMenuItem(
-                    icon: Icons.edit,
-                    title: "Edit Profile",
-                    onTap: _updating ? null : _editProfile,
-                    trailing: _updating
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : null,
-                  ),
-                  _buildMenuItem(
-                    icon: Icons.info_outline,
-                    title: "Tentang Aplikasi",
-                    onTap: () {
-                      // Bisa diarahkan ke halaman About
-                    },
-                  ),
-                ],
+               SizedBox(height: 16),
+              Container(
+                color: Colors.white,
+                child: Column(
+                  children: [
+                    _buildMenuItem(
+                      icon: Icons.edit,
+                      title: "Edit Profile",
+                      onTap: _updating ? null : _editProfile,
+                      trailing: _updating
+                          ?  SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : null,
+                    ),
+                    _buildMenuItem(
+                      icon: Icons.info_outline,
+                      title: "Tentang Aplikasi",
+                      onTap: () {
+                        context.push(AboutScreen());
+                      },
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            Container(
-              color: Colors.white,
-              child: _buildMenuItem(
-                icon: Icons.logout,
-                title: "Logout",
-                color: Colors.red,
-                onTap: () {
-                  Navigator.pushReplacementNamed(context, LoginScreen.id);
-                },
+               SizedBox(height: 16),
+              Container(
+                color: Colors.white,
+                child: _buildMenuItem(
+                  icon: Icons.logout,
+                  title: "Logout",
+                  color: Colors.red,
+                  onTap: _updating
+                      ? null
+                      : () {
+                          Navigator.pushReplacementNamed(context, LoginScreen.id);
+                        },
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  ImageProvider? _getProfileImage(Data? user) {
+    if (_selectedImage != null) {
+      return FileImage(_selectedImage!);
+    } else if (user?.profilePhotoUrl != null && user!.profilePhotoUrl!.isNotEmpty) {
+      return NetworkImage(user.profilePhotoUrl!);
+    }
+    return null;
+  }
+
+  Widget? _getProfilePlaceholder(Data? user) {
+    if (_selectedImage != null || 
+        (user?.profilePhotoUrl != null && user!.profilePhotoUrl!.isNotEmpty)) {
+      return null;
+    }
+    return  Icon(Icons.person, size: 50, color: Colors.grey);
   }
 
   Widget _buildMenuItem({
@@ -225,22 +338,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
       title: Text(
         title,
         style: TextStyle(
-          color: color,
+          color: onTap == null ? Colors.grey : color,
           fontFamily: "StageGrotesk_Medium",
           fontSize: 16,
         ),
       ),
-      trailing:
-          trailing ??
-          const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+      trailing: trailing ??  Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
       onTap: onTap,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      contentPadding:  EdgeInsets.symmetric(horizontal: 20, vertical: 8),
     );
   }
 }
 
-extension on Data {
-  Data copyWith({String? name, String? email}) {
+extension DataCopyWith on Data {
+  Data copyWith({
+    String? name,
+    String? email,
+    String? profilePhoto,
+    String? profilePhotoUrl,
+  }) {
     return Data(
       id: id,
       name: name ?? this.name,
@@ -250,8 +366,8 @@ extension on Data {
       batch: batch,
       training: training,
       jenisKelamin: jenisKelamin,
-      profilePhoto: profilePhoto,
-      profilePhotoUrl: profilePhotoUrl,
+      profilePhoto: profilePhoto ?? this.profilePhoto,
+      profilePhotoUrl: profilePhotoUrl ?? this.profilePhotoUrl,
     );
   }
 }

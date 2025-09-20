@@ -6,10 +6,8 @@ class Endpoint {
   static const String checkOut = "$baseURL/api/absen/check-out";
   static const String izin = "$baseURL/api/izin";
   static const String deviceToken = "$baseURL/api/device-token";
-  static String absenToday(String date) =>
-      "$baseURL/api/absen/today?attendance_date=$date";
-  static String absenStats(String start, String end) =>
-      "$baseURL/api/absen/stats?start=$start&end=$end";
+  static String absenToday = "$baseURL/api/absen/today";
+  static String absenStats = "$baseURL/api/absen/stats";
   static const String deleteAbsen = "$baseURL/api/absen/today?attendance_date";
   static const String profile = "$baseURL/api/profile";
   static const String editProfilePhoto = "$baseURL/api/profile/photo";
