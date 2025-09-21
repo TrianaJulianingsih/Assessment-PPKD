@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math';
 import 'package:absensi_apps/api/attendance.dart';
 import 'package:flutter/material.dart';
@@ -6,6 +7,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:absensi_apps/models/absen_today.dart';
+import 'package:geocoding/geocoding.dart';
 
 class PresenceScreen extends StatefulWidget {
   const PresenceScreen({super.key});
@@ -19,10 +21,11 @@ class _PresenceScreenState extends State<PresenceScreen> {
   Completer<GoogleMapController> _mapController = Completer();
   LatLng? _currentLatLng;
   String? _status;
-  String? _checkIn;
-  String? _checkOut;
+  String? _currentAddress;
   DateTime _today = DateTime.now();
   bool _loading = true;
+  AbsenTodayModel? _todayModel;
+  bool _isLate = false; // Tambahkan variabel untuk status telat
 
   @override
   void initState() {
@@ -37,20 +40,85 @@ class _PresenceScreenState extends State<PresenceScreen> {
       setState(() => _loading = false);
       return;
     }
+
+    // Get current position
     final pos = await Geolocator.getCurrentPosition(
       desiredAccuracy: LocationAccuracy.high,
     );
-    _currentLatLng = LatLng(pos.latitude, pos.longitude);
-    final todayData = await AttendanceAPI.getToday();
-    if (todayData != null && todayData.data != null) {
+
+    // Get address from coordinates
+    await _getAddressFromLatLng(pos.latitude, pos.longitude);
+
+    setState(() {
+      _currentLatLng = LatLng(pos.latitude, pos.longitude);
+    });
+
+    // Load today's attendance data
+    await _loadTodayData();
+    setState(() => _loading = false);
+  }
+
+  // Fungsi untuk mendapatkan alamat dari koordinat
+  Future<void> _getAddressFromLatLng(double latitude, double longitude) async {
+    try {
+      List<Placemark> placemarks = await placemarkFromCoordinates(
+        latitude,
+        longitude,
+      );
+      Placemark place = placemarks[0];
+
+      String address =
+          '${place.street}, ${place.subLocality}, ${place.locality}, ${place.postalCode}';
+
       setState(() {
-        _status = todayData.data!.status;
-        _checkIn = todayData.data!.checkInTime;
-        _checkOut = todayData.data!.checkOutTime;
+        _currentAddress = address;
+      });
+    } catch (e) {
+      print("Error getting address: $e");
+      setState(() {
+        _currentAddress = "Alamat tidak dapat ditemukan";
       });
     }
+  }
 
-    setState(() => _loading = false);
+  // Fungsi untuk memeriksa apakah check-in telat (setelah jam 8 pagi)
+  bool _checkIsLate(String checkInTime) {
+    try {
+      if (checkInTime.isEmpty) return false;
+      
+      // Parse waktu check-in
+      List<String> timeParts = checkInTime.split(':');
+      int hour = int.parse(timeParts[0]);
+      int minute = int.parse(timeParts[1]);
+      
+      // Jika check-in setelah jam 8:00, dianggap telat
+      return hour > 8 || (hour == 8 && minute > 0);
+    } catch (e) {
+      print("Error parsing check-in time: $e");
+      return false;
+    }
+  }
+
+  Future<void> _loadTodayData() async {
+    final todayData = await AttendanceAPI.getToday();
+    if (!mounted) return;
+
+    setState(() {
+      _todayModel = todayData;
+      if (_todayModel != null && _todayModel!.data != null) {
+        _status = _todayModel!.data!.status;
+        
+        // Periksa apakah check-in telat
+        if (_todayModel!.data!.checkInTime != null) {
+          _isLate = _checkIsLate(_todayModel!.data!.checkInTime!);
+          
+          // Jika telat, update status
+          if (_isLate && _status != 'izin' && _status != 'sakit') {
+            _status = 'telat';
+          }
+        }
+      }
+    });
   }
 
   final Random _rand = Random();
@@ -58,51 +126,63 @@ class _PresenceScreenState extends State<PresenceScreen> {
     {
       'question': 'Apa Ibu Kota Indonesia?',
       'options': ['Jakarta', 'Batavia', 'Bandung'],
+      'correct': 'Jakarta',
     },
     {
       'question': 'Gunung tertinggi di Indonesia?',
       'options': ['Puncak Jaya', 'Semeru', 'Rinjani'],
+      'correct': 'Puncak Jaya',
     },
     {
       'question': 'Lambang negara Indonesia adalah?',
       'options': ['Garuda Pancasila', 'Banteng', 'Merpati'],
+      'correct': 'Garuda Pancasila',
     },
   ];
 
-  Future<String?> _askQuestion() async {
+  Future<bool> _askQuestion() async {
     final q = _questions[_rand.nextInt(_questions.length)];
-    String? jawaban = q['options'][0];
+    String? selectedAnswer = q['options'][0];
 
-    return await showDialog<String>(
+    final result = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
             return AlertDialog(
-              title: Text(q['question']),
+              title: Text("Pertanyaan Keamanan"),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  Text(
+                    q['question'],
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 10),
                   for (final opt in q['options'])
                     RadioListTile<String>(
                       title: Text(opt),
                       value: opt,
-                      groupValue: jawaban,
-                      onChanged: (val) => setStateDialog(() => jawaban = val),
+                      groupValue: selectedAnswer,
+                      onChanged: (val) =>
+                          setStateDialog(() => selectedAnswer = val),
                     ),
                 ],
               ),
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.pop(context, null),
+                  onPressed: () => Navigator.pop(context, false),
                   child: Text("Batal"),
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    if (jawaban != null) Navigator.pop(context, jawaban);
+                    if (selectedAnswer != null) {
+                      bool isCorrect = selectedAnswer == q['correct'];
+                      Navigator.pop(context, isCorrect);
+                    }
                   },
-                  child: Text("Lanjut"),
+                  child: Text("Submit"),
                 ),
               ],
             );
@@ -110,60 +190,74 @@ class _PresenceScreenState extends State<PresenceScreen> {
         );
       },
     );
+
+    return result ?? false;
   }
 
   Future<void> _handleCheckIn() async {
     if (_currentLatLng == null) return;
-    final jawaban = await _askQuestion();
-    if (jawaban == null) return;
+
+    final isCorrect = await _askQuestion();
+    if (!isCorrect) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Jawaban salah, silakan coba lagi")),
+      );
+      return;
+    }
 
     final now = DateTime.now();
+    final checkInTime = DateFormat('HH:mm').format(now);
+    
+    bool isLate = _checkIsLate(checkInTime);
+    
     final model = await AttendanceAPI.checkIn(
       attendanceDate: DateFormat('yyyy-MM-dd').format(now),
-      checkIn: DateFormat('HH:mm').format(now),
+      checkIn: checkInTime,
       lat: _currentLatLng!.latitude,
       lng: _currentLatLng!.longitude,
-      address: "Lokasi saya",
+      address: _currentAddress ?? "Lokasi saya",
     );
 
     if (model != null) {
-      setState(() {
-        _status = model.data?.status;
-        _checkIn = model.data?.checkInTime;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Check-In berhasil. Jawaban: $jawaban")),
-      );
+      await _loadTodayData();
+      
+      if (isLate) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Check-In berhasil (Status: Telat)")),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Check-In berhasil")),
+        );
+      }
     } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Gagal Check-In")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Gagal Check-In")),
+      );
     }
   }
 
   Future<void> _handleCheckOut() async {
     if (_currentLatLng == null) return;
+
     final now = DateTime.now();
     final model = await AttendanceAPI.checkOut(
       attendanceDate: DateFormat('yyyy-MM-dd').format(now),
       checkOut: DateFormat('HH:mm').format(now),
       lat: _currentLatLng!.latitude,
       lng: _currentLatLng!.longitude,
-      address: "Lokasi saya",
+      address: _currentAddress ?? "Lokasi saya",
     );
 
     if (model != null) {
-      setState(() {
-        _status = model.data?.status;
-        _checkOut = model.data?.checkOutTime;
-      });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Check-Out berhasil")));
+      await _loadTodayData();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Check-Out berhasil")),
+      );
     } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Gagal Check-Out")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Gagal Check-Out")),
+      );
     }
   }
 
@@ -190,7 +284,6 @@ class _PresenceScreenState extends State<PresenceScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // ✅ Google Map
             SizedBox(
               height: 400,
               child: _currentLatLng == null
@@ -231,12 +324,38 @@ class _PresenceScreenState extends State<PresenceScreen> {
               ),
             ),
             Padding(
-              padding: EdgeInsets.only(left: 15, top: 5),
+              padding: EdgeInsets.only(right: 270, top: 5),
               child: Text(
                 "Status : ${_status ?? 'Belum absen'}",
-                style: TextStyle(fontFamily: "StageGrotesk_Regular"),
+                style: TextStyle(
+                  fontFamily: "StageGrotesk_Regular",
+                  color: _isLate ? Colors.red : Colors.black, // Warna merah jika telat
+                ),
               ),
             ),
+            // Tambahkan indikator telat jika perlu
+            if (_isLate)
+              Padding(
+                padding: EdgeInsets.only(right: 270, top: 5),
+                child: Text(
+                  "⚠️ Check-in terlambat",
+                  style: TextStyle(
+                    fontFamily: "StageGrotesk_Regular",
+                    color: Colors.red,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            Padding(
+              padding: EdgeInsets.only(left: 15, top: 5),
+              child: Text(
+                "Lokasi : ${_currentAddress ?? 'Mendapatkan lokasi...'}",
+                style: TextStyle(fontFamily: "StageGrotesk_Regular"),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+
             SizedBox(height: 20),
             Center(
               child: Container(
@@ -261,8 +380,14 @@ class _PresenceScreenState extends State<PresenceScreen> {
                       "Tanggal",
                       DateFormat('dd MMM yyyy').format(_today),
                     ),
-                    _infoColumn("Check-In", _checkIn ?? "-"),
-                    _infoColumn("Check-Out", _checkOut ?? "-"),
+                    _infoColumn(
+                      "Check-In",
+                      _todayModel?.data?.checkInTime ?? "-",
+                    ),
+                    _infoColumn(
+                      "Check-Out",
+                      _todayModel?.data?.checkOutTime ?? "-",
+                    ),
                   ],
                 ),
               ),
@@ -272,12 +397,18 @@ class _PresenceScreenState extends State<PresenceScreen> {
               label: "Check-In",
               color: Color(0xFF10B981),
               onPressed: _handleCheckIn,
+              // Disable button if already checked in
+              disabled: _todayModel?.data?.checkInTime != null,
             ),
             SizedBox(height: 20),
             _buildButton(
               label: "Check-Out",
               color: Colors.amber,
               onPressed: _handleCheckOut,
+              // Disable button if not checked in yet or already checked out
+              disabled:
+                  _todayModel?.data?.checkInTime == null ||
+                  _todayModel?.data?.checkOutTime != null,
             ),
           ],
         ),
@@ -305,6 +436,7 @@ class _PresenceScreenState extends State<PresenceScreen> {
     required String label,
     required Color color,
     required VoidCallback onPressed,
+    bool disabled = false,
   }) {
     return Center(
       child: SizedBox(
@@ -312,12 +444,12 @@ class _PresenceScreenState extends State<PresenceScreen> {
         height: 60,
         child: ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: color,
+            backgroundColor: disabled ? Colors.grey : color,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
             ),
           ),
-          onPressed: onPressed,
+          onPressed: disabled ? null : onPressed,
           child: Text(
             label,
             style: TextStyle(

@@ -8,21 +8,21 @@ class PreferenceHandler {
   static const String batchKey = "batch";
   static const String loginKey = "login";
 
-  static Future<void> saveUserData(
-    String token,
-    int userId,
-    String email,
-    String name,
-    String batch,
-  ) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(tokenKey, token);
-    await prefs.setInt(userIdKey, userId);
-    await prefs.setString(userEmailKey, email);
-    await prefs.setString(userNameKey, name);
-    await prefs.setString(batchKey, batch);
-    await prefs.setBool(loginKey, true);
-  }
+  // static Future<void> saveUserData(
+  //   String token,
+  //   int userId,
+  //   String email,
+  //   String name,
+  //   String batch,
+  // ) async {
+  //   final prefs = await SharedPreferences.getInstance();
+  //   await prefs.setString(tokenKey, token);
+  //   await prefs.setInt(userIdKey, userId);
+  //   await prefs.setString(userEmailKey, email);
+  //   await prefs.setString(userNameKey, name);
+  //   await prefs.setString(batchKey, batch);
+  //   await prefs.setBool(loginKey, true);
+  // }
 
   static void saveToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
@@ -39,63 +39,22 @@ class PreferenceHandler {
     return prefs.getInt(userIdKey);
   }
 
-  static Future<String?> getUserEmail() async {
+  static Future<void> saveCheckTimes({
+    String? checkIn,
+    String? checkOut,
+  }) async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(userEmailKey);
-  }
-
-  static Future<void> setUserEmail(String userEmail) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(userNameKey, userEmail);
-  }
-
-  static Future<String?> getUserName() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(userNameKey);
-  }
-
-  static Future<void> setUserName(String userName) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(userNameKey, userName);
-  }
-
-  static Future<String?> getBatch() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(batchKey);
-  }
-
-  static Future<void> setBatch(String batch) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(batchKey, batch);
-  }
-
-  // Di file PreferenceHandler.dart tambahkan method berikut:
-
-  static Future<void> setCheckInTime(String checkInTime) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('check_in_time', checkInTime);
+    if (checkIn != null) {
+      await prefs.setString('checkInTime', checkIn);
+    }
+    if (checkOut != null) {
+      await prefs.setString('checkOutTime', checkOut);
+    }
   }
 
   static Future<String?> getCheckInTime() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('check_in_time');
-  }
-
-  static Future<void> setCheckInStatus(bool hasCheckedIn) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('has_checked_in', hasCheckedIn);
-  }
-
-  static Future<bool> getCheckInStatus() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool('has_checked_in') ?? false;
-  }
-
-  // Tambahkan method berikut di class PreferenceHandler
-
-  static Future<void> setCheckOutTime(String time) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('checkOutTime', time);
+    return prefs.getString('checkInTime');
   }
 
   static Future<String?> getCheckOutTime() async {
@@ -103,25 +62,10 @@ class PreferenceHandler {
     return prefs.getString('checkOutTime');
   }
 
-  static Future<void> setCheckOutStatus(bool status) async {
+  static Future<void> clearCheckTimes() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('hasCheckedOut', status);
-  }
-
-  static Future<bool> getCheckOutStatus() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool('hasCheckedOut') ?? false;
-  }
-
-  static Future<void> clearCheckInData() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('check_in_time');
-    await prefs.remove('has_checked_in');
-  }
-
-  static Future<bool?> getLoginStatus() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(loginKey);
+    await prefs.remove('checkInTime');
+    await prefs.remove('checkOutTime');
   }
 
   static Future<bool?> getLogin() async {

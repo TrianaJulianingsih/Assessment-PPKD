@@ -10,7 +10,7 @@ String absenStatsModelToJson(AbsenStatsModel data) => json.encode(data.toJson())
 
 class AbsenStatsModel {
     String? message;
-    Data? data;
+    AbsenStatsData? data;
 
     AbsenStatsModel({
         this.message,
@@ -19,7 +19,7 @@ class AbsenStatsModel {
 
     factory AbsenStatsModel.fromJson(Map<String, dynamic> json) => AbsenStatsModel(
         message: json["message"],
-        data: json["data"] == null ? null : Data.fromJson(json["data"]),
+        data: json["data"] == null ? null : AbsenStatsData.fromJson(json["data"]),
     );
 
     Map<String, dynamic> toJson() => {
@@ -28,20 +28,20 @@ class AbsenStatsModel {
     };
 }
 
-class Data {
+class AbsenStatsData {
     int? totalAbsen;
     int? totalMasuk;
     int? totalIzin;
     bool? sudahAbsenHariIni;
 
-    Data({
+    AbsenStatsData({
         this.totalAbsen,
         this.totalMasuk,
         this.totalIzin,
         this.sudahAbsenHariIni,
     });
 
-    factory Data.fromJson(Map<String, dynamic> json) => Data(
+    factory AbsenStatsData.fromJson(Map<String, dynamic> json) => AbsenStatsData(
         totalAbsen: json["total_absen"],
         totalMasuk: json["total_masuk"],
         totalIzin: json["total_izin"],

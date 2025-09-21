@@ -12,20 +12,20 @@ String absenTodayModelToJson(AbsenTodayModel data) =>
 
 class AbsenTodayModel {
   String? message;
-  Data? data;
+  AbsenTodayData? data;
 
   AbsenTodayModel({this.message, this.data});
 
   factory AbsenTodayModel.fromJson(Map<String, dynamic> json) =>
       AbsenTodayModel(
         message: json["message"],
-        data: json["data"] == null ? null : Data.fromJson(json["data"]),
+        data: json["data"] == null ? null : AbsenTodayData.fromJson(json["data"]),
       );
 
   Map<String, dynamic> toJson() => {"message": message, "data": data?.toJson()};
 }
 
-class Data {
+class AbsenTodayData {
   DateTime? attendanceDate;
   String? checkInTime;
   String? checkOutTime;
@@ -34,7 +34,7 @@ class Data {
   String? status;
   dynamic alasanIzin;
 
-  Data({
+  AbsenTodayData({
     this.attendanceDate,
     this.checkInTime,
     this.checkOutTime,
@@ -44,7 +44,7 @@ class Data {
     this.alasanIzin,
   });
 
-  factory Data.fromJson(Map<String, dynamic> json) => Data(
+  factory AbsenTodayData.fromJson(Map<String, dynamic> json) => AbsenTodayData(
     attendanceDate: json["attendance_date"] == null
         ? null
         : DateTime.parse(json["attendance_date"]),

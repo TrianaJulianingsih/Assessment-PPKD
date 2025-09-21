@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:absensi_apps/api/profile.dart';
 import 'package:absensi_apps/extension/navigation.dart';
 import 'package:absensi_apps/models/get_profile_model.dart';
+import 'package:absensi_apps/shared_preferences.dart/shared_preference.dart';
 import 'package:absensi_apps/views/about_screen.dart';
 import 'package:absensi_apps/views/login_screen.dart';
 import 'package:flutter/material.dart';
@@ -309,7 +310,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  ImageProvider? _getProfileImage(Data? user) {
+  ImageProvider? _getProfileImage(ProfileData? user) {
     if (_selectedImage != null) {
       return FileImage(_selectedImage!);
     } else if (user?.profilePhotoUrl != null && user!.profilePhotoUrl!.isNotEmpty) {
@@ -318,7 +319,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return null;
   }
 
-  Widget? _getProfilePlaceholder(Data? user) {
+  Widget? _getProfilePlaceholder(ProfileData? user) {
     if (_selectedImage != null || 
         (user?.profilePhotoUrl != null && user!.profilePhotoUrl!.isNotEmpty)) {
       return null;
@@ -350,14 +351,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 }
 
-extension DataCopyWith on Data {
-  Data copyWith({
+extension DataCopyWith on ProfileData {
+  ProfileData copyWith({
     String? name,
     String? email,
     String? profilePhoto,
     String? profilePhotoUrl,
   }) {
-    return Data(
+    return ProfileData(
       id: id,
       name: name ?? this.name,
       email: email ?? this.email,

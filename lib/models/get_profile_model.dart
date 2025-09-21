@@ -12,20 +12,20 @@ String getProfileModelToJson(GetProfileModel data) =>
 
 class GetProfileModel {
   String? message;
-  Data? data;
+  ProfileData? data;
 
   GetProfileModel({this.message, this.data});
 
   factory GetProfileModel.fromJson(Map<String, dynamic> json) =>
       GetProfileModel(
         message: json["message"],
-        data: json["data"] == null ? null : Data.fromJson(json["data"]),
+        data: json["data"] == null ? null : ProfileData.fromJson(json["data"]),
       );
 
   Map<String, dynamic> toJson() => {"message": message, "data": data?.toJson()};
 }
 
-class Data {
+class ProfileData {
   int? id;
   String? name;
   String? email;
@@ -37,7 +37,7 @@ class Data {
   String? profilePhoto;
   String? profilePhotoUrl;
 
-  Data({
+  ProfileData({
     this.id,
     this.name,
     this.email,
@@ -50,7 +50,7 @@ class Data {
     this.profilePhotoUrl,
   });
 
-  factory Data.fromJson(Map<String, dynamic> json) => Data(
+  factory ProfileData.fromJson(Map<String, dynamic> json) => ProfileData(
     id: json["id"],
     name: json["name"],
     email: json["email"],
