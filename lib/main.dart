@@ -1,3 +1,4 @@
+import 'package:absensi_apps/views/forgot_password_screen.dart';
 import 'package:absensi_apps/views/login_screen.dart';
 import 'package:absensi_apps/views/presence_screen.dart';
 import 'package:absensi_apps/views/splash_screen.dart';
@@ -44,6 +45,7 @@ class MyApp extends StatelessWidget {
       routes: {
         LoginScreen.id: (context) => LoginScreen(),
         PresenceScreen.id: (context) => PresenceScreen(),
+        ForgotPasswordScreen.id: (context) => ForgotPasswordScreen(),
       },
       debugShowCheckedModeBanner: false,
     );

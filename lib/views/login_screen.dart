@@ -3,6 +3,7 @@ import 'package:absensi_apps/extension/navigation.dart';
 import 'package:absensi_apps/shared_preferences.dart/shared_preference.dart';
 import 'package:absensi_apps/utils/copy_right_screen.dart';
 import 'package:absensi_apps/views/buttom_nav.dart';
+import 'package:absensi_apps/views/forgot_password_screen.dart';
 import 'package:absensi_apps/views/register_screen.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -204,11 +205,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 TextButton(
                   onPressed: () {
-                    // TODO: Implement forgot password
+                    context.pushNamed(ForgotPasswordScreen.id);
                   },
                   child: Text(
                     "Lupa password?",
-                    style: TextStyle(fontFamily: "StageGrotesk_Regular"),
+                    style: TextStyle(fontFamily: "StageGrotesk_Regular", color: Color(0xFF1E3A8A), fontSize: 14),
                   ),
                 ),
                 SizedBox(height: 20),

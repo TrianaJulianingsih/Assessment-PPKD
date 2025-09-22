@@ -30,8 +30,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
     switch (status?.toLowerCase()) {
       case 'masuk':
         return Colors.lightBlue;
-      case 'telat':
-        return Colors.red;
       case 'izin':
         return Colors.amber;
       default:
@@ -113,41 +111,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     : '-';
                 final status = item.status ?? '-';
                 return Card(
+                  color: Colors.white,
                   margin: EdgeInsets.only(bottom: 12),
                   child: ListTile(
-                    leading: Container(
-                      height: 80,
-                      width: 60,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: Colors.grey[100],
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            DateFormat(
-                              'dd',
-                            ).format(item.attendanceDate ?? DateTime.now()),
-                            style: TextStyle(
-                              fontFamily: "StageGrotesk_Bold",
-                              fontSize: 20,
-                              color: Color(0xFF1E3A8A),
-                            ),
-                          ),
-                          Text(
-                            DateFormat(
-                              'MMM',
-                            ).format(item.attendanceDate ?? DateTime.now()),
-                            style: TextStyle(
-                              fontFamily: "StageGrotesk_Regular",
-                              fontSize: 14,
-                              color: Colors.black54,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    leading: Icon(Icons.calendar_today_rounded, size: 20),
                     title: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -155,7 +122,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           Text(
                             'Check-in: ${item.checkInTime}',
                             style: TextStyle(
-                              fontSize: 12,
+                              fontSize: 14,
                               fontFamily: "StageGrotesk_Medium",
                             ),
                           ),
@@ -163,7 +130,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           Text(
                             'Check-out: ${item.checkOutTime}',
                             style: TextStyle(
-                              fontSize: 12,
+                              fontSize: 14,
                               fontFamily: "StageGrotesk_Medium",
                             ),
                           ),

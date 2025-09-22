@@ -48,7 +48,6 @@ class ProfileAPI {
     }
 
     print("Update Profile URL: $url");
-    // print("Update Profile Data: {profile_photo: $image}");
 
     final response = await http.put(
       url,

@@ -96,14 +96,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title:  Text("Edit Profile"),
+        title:  Text("Edit Profile", style: TextStyle(fontFamily: "StageGrotesk_Medium"),),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: nameController,
               decoration:  InputDecoration(
-                labelText: "Nama",
+                labelText: "Nama", labelStyle: TextStyle(fontFamily: "StageGrotesk_Regular"),
                 border: OutlineInputBorder(),
               ),
             ),
@@ -112,7 +112,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child:  Text("Batal"),
+            child:  Text("Batal", style: TextStyle(fontFamily: "StageGrotesk_Medium", color: Colors.red),),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -127,7 +127,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Navigator.pop(context);
               await _updateName(name);
             },
-            child:  Text("Simpan"),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Color(0xFF1E3A8A)
+            ),
+            child:  Text("Simpan", style: TextStyle(fontFamily: "StageGrotesk_Medium", color: Colors.white, fontSize: 14),),
           ),
         ],
       ),

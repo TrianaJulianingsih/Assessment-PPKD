@@ -33,8 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _profileFuture = ProfileAPI.getProfile();
     _todayFuture = AttendanceAPI.getToday();
     _historyFuture = HistoryAPI.getHistory();
-    _statsFuture =
-        StatistikAPI.getStats(); // Pastikan method ini sudah ada di AttendanceAPI
+    _statsFuture = StatistikAPI.getStats();
     _getCurrentLocation();
   }
 
@@ -100,16 +99,16 @@ class _HomeScreenState extends State<HomeScreen> {
         });
       },
       child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
+        physics: AlwaysScrollableScrollPhysics(),
         child: Column(
           children: [
-            const SizedBox(height: 20),
+            SizedBox(height: 20),
             _buildProfileCard(),
-            const SizedBox(height: 20),
+            SizedBox(height: 20),
             _buildStatsCard(),
-            const SizedBox(height: 20),
+            SizedBox(height: 20),
             _buildTodayCard(),
-            const SizedBox(height: 20),
+            SizedBox(height: 20),
             _buildHistoryList(),
           ],
         ),
@@ -117,57 +116,58 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // === Profile Card ===
   Widget _buildProfileCard() {
-    return FutureBuilder<GetProfileModel>(
-      future: _profileFuture,
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) return const CircularProgressIndicator();
-        final profile = snapshot.data!.data!;
-        return Container(
-          height: 120,
-          width: 350,
-          decoration: _boxWhite(),
-          child: Row(
-            children: [
-              const SizedBox(width: 20),
-              CircleAvatar(
-                radius: 30,
-                backgroundImage: profile.profilePhotoUrl != null
-                    ? NetworkImage(profile.profilePhotoUrl!)
-                    : const AssetImage("assets/images/foto ppkd.jpeg")
-                          as ImageProvider,
-              ),
-              const SizedBox(width: 20),
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Selamat ${_getGreeting()}",
-                      style: const TextStyle(fontSize: 14),
-                    ),
-                    Text(
-                      profile.name ?? "-",
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      profile.training?.title ?? "No Training",
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                    const SizedBox(height: 5),
-                    // _buildLocationInfo(),
-                  ],
+    return Padding(
+      padding: EdgeInsets.only(top: 30),
+      child: FutureBuilder<GetProfileModel>(
+        future: _profileFuture,
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) return CircularProgressIndicator();
+          final profile = snapshot.data!.data!;
+          return Container(
+            height: 120,
+            width: 350,
+            decoration: _boxWhite(),
+            child: Row(
+              children: [
+                SizedBox(width: 20),
+                CircleAvatar(
+                  radius: 30,
+                  backgroundImage: profile.profilePhotoUrl != null
+                      ? NetworkImage(profile.profilePhotoUrl!)
+                      : AssetImage("assets/images/foto ppkd.jpeg")
+                            as ImageProvider,
                 ),
-              ),
-            ],
-          ),
-        );
-      },
+                SizedBox(width: 20),
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Selamat ${_getGreeting()}",
+                        style: TextStyle(fontSize: 14, fontFamily: "StageGrotesk_Regular"),
+                      ),
+                      Text(
+                        profile.name ?? "-",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontFamily: "StageGrotesk_Bold",
+                        ),
+                      ),
+                      Text(
+                        profile.training?.title ?? "No Training",
+                        style: TextStyle(fontSize: 14, fontFamily: "StageGrotesk_Regular"),
+                      ),
+                      SizedBox(height: 5),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -176,15 +176,15 @@ class _HomeScreenState extends State<HomeScreen> {
       future: _statsFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return Center(child: CircularProgressIndicator());
         }
 
         if (!snapshot.hasData || snapshot.data?.data == null) {
           return Container(
             width: 350,
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(16),
             decoration: _boxWhite(),
-            child: const Text("Tidak ada data statistik"),
+            child: Text("Tidak ada data statistik", style: TextStyle(fontFamily: "StageGrotesk_Regular"),),
           );
         }
 
@@ -195,16 +195,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
         return Container(
           width: 350,
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(16),
           decoration: _boxWhite(),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 "Statistik Absen",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 16, fontFamily: "StageGrotesk_Bold"),
               ),
-              const SizedBox(height: 10),
+              SizedBox(height: 10),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
@@ -213,29 +213,29 @@ class _HomeScreenState extends State<HomeScreen> {
                   _statItem("Izin", totalIzin, Colors.orange),
                 ],
               ),
-              const SizedBox(height: 10),
+              SizedBox(height: 10),
               if (totalAbsen > 0) ...[
                 LinearProgressIndicator(
                   value: totalMasuk / totalAbsen,
                   backgroundColor: Colors.grey[300],
                   valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
                 ),
-                const SizedBox(height: 5),
+                SizedBox(height: 5),
                 Text(
                   "Kehadiran: $totalMasuk/$totalAbsen "
                   "(${(totalMasuk / totalAbsen * 100).toStringAsFixed(1)}%)",
-                  style: const TextStyle(fontSize: 12),
+                  style: TextStyle(fontSize: 14, fontFamily: "StageGrotesk_Regular"),
                 ),
               ],
-              const SizedBox(height: 5),
+              SizedBox(height: 5),
               Text(
                 "Status Hari Ini: ${stats.sudahAbsenHariIni == true ? 'Sudah Absen' : 'Belum Absen'}",
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 14,
                   color: stats.sudahAbsenHariIni == true
                       ? Color(0xFF10B981)
                       : Colors.orange,
-                  fontWeight: FontWeight.bold,
+                  fontFamily: "StageGrotesk_Bold",
                 ),
               ),
             ],
@@ -259,33 +259,32 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Text(
               count.toString(),
               style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                fontFamily: "StageGrotesk_Regular",
                 color: color,
               ),
             ),
           ),
         ),
-        const SizedBox(height: 5),
-        Text(title, style: const TextStyle(fontSize: 10)),
+        SizedBox(height: 5),
+        Text(title, style: TextStyle(fontSize: 14)),
       ],
     );
   }
 
-  // === Absen Hari Ini ===
   Widget _buildTodayCard() {
     return FutureBuilder<AbsenTodayModel?>(
       future: _todayFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const CircularProgressIndicator();
+          return CircularProgressIndicator();
         }
         if (!snapshot.hasData || snapshot.data?.data == null) {
           return Container(
             width: 350,
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(16),
             decoration: _boxWhite(),
-            child: const Text("Belum ada data absen hari ini"),
+            child: Text("Belum ada data absen hari ini", style: TextStyle(fontFamily: "StageGrotesk_Medium"),),
           );
         }
         final today = snapshot.data!.data!;
@@ -295,33 +294,29 @@ class _HomeScreenState extends State<HomeScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 _timeBox("Check In", today.checkInTime ?? "-"),
-                const SizedBox(width: 10),
+                SizedBox(width: 10),
                 _timeBox("Check Out", today.checkOutTime ?? "-"),
               ],
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
             Container(
               width: 350,
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(16),
               decoration: _boxBlue(),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      const Icon(
-                        Icons.location_on,
-                        color: Colors.white,
-                        size: 16,
-                      ),
-                      const SizedBox(width: 8),
+                      Icon(Icons.location_on, color: Colors.white, size: 20),
+                      SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           _currentAddress ?? "Lokasi tidak tersedia",
-                          style: const TextStyle(
-                            fontSize: 14,
+                          style: TextStyle(
+                            fontSize: 16,
                             color: Colors.white,
-                            fontFamily: "StageGrotesk_Regular"
+                            fontFamily: "StageGrotesk_Regular",
                           ),
                           maxLines: 4,
                           overflow: TextOverflow.ellipsis,
@@ -338,55 +333,54 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // === Riwayat Absen ===
   Widget _buildHistoryList() {
     return FutureBuilder<HistoryModel>(
       future: _historyFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return Center(child: CircularProgressIndicator());
         }
         if (!snapshot.hasData || snapshot.data!.data == null) {
           return Container(
-            padding: const EdgeInsets.all(16),
-            child: const Text("Tidak ada riwayat absen"),
+            padding: EdgeInsets.all(16),
+            child: Text("Tidak ada riwayat absen"),
           );
         }
         final items = snapshot.data!.data!;
         return Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 "Riwayat Absen",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 18, fontFamily: "StageGrotesk_Bold"),
               ),
-              const SizedBox(height: 10),
               ListView.builder(
                 shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
+                physics: NeverScrollableScrollPhysics(),
                 itemCount: items.length,
                 itemBuilder: (context, i) {
                   final h = items[i];
                   return Card(
-                    margin: const EdgeInsets.symmetric(vertical: 4),
+                    color: Colors.white,
+                    margin: EdgeInsets.symmetric(vertical: 4),
                     child: ListTile(
-                      leading: const Icon(Icons.calendar_today, size: 20),
+                      leading: Icon(Icons.calendar_today_rounded, size: 20),
                       title: Text(
                         DateFormat(
                           'dd MMM yyyy',
                         ).format(h.attendanceDate ?? DateTime.now()),
-                        style: const TextStyle(fontSize: 14),
+                        style: TextStyle(fontSize: 16, fontFamily: "StageGrotesk_Medium"),
                       ),
                       subtitle: Text(
                         "In: ${h.checkInTime ?? '-'} | Out: ${h.checkOutTime ?? '-'}",
-                        style: const TextStyle(fontSize: 12),
+                        style: TextStyle(fontSize: 14, fontFamily: "StageGrotesk_Medium"),
                       ),
                       trailing: Container(
-                        padding: const EdgeInsets.symmetric(
+                        padding: EdgeInsets.symmetric(
                           horizontal: 8,
-                          vertical: 4,
+                          vertical: 2,
                         ),
                         decoration: BoxDecoration(
                           color: _getStatusColor(h.status),
@@ -394,10 +388,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         child: Text(
                           h.status ?? "-",
-                          style: const TextStyle(
-                            fontSize: 10,
-                            color: Colors.white,
-                          ),
+                          style: TextStyle(fontSize: 12, color: Colors.white, fontFamily: "StageGrotesk_Regular"),
                         ),
                       ),
                     ),
@@ -424,27 +415,23 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // === Helper Widget ===
   Widget _timeBox(String title, String time) {
     return Container(
       height: 80,
       width: 160,
-      padding: const EdgeInsets.all(8),
+      padding: EdgeInsets.all(8),
       decoration: _boxBlue(),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
-            title,
-            style: const TextStyle(color: Colors.white, fontSize: 14),
-          ),
-          const SizedBox(height: 5),
+          Text(title, style: TextStyle(color: Colors.white, fontSize: 14, fontFamily: "StageGrotesk_Medium")),
+          SizedBox(height: 5),
           Text(
             time,
-            style: const TextStyle(
+            style: TextStyle(
               color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+              fontSize: 18,
+              fontFamily: "StageGrotesk_Bold",
             ),
           ),
         ],
@@ -453,7 +440,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   BoxDecoration _boxBlue() => BoxDecoration(
-    color: const Color(0xFF1E3A8A),
+    color: Color(0xFF1E3A8A),
     borderRadius: BorderRadius.circular(8),
   );
 
@@ -465,7 +452,7 @@ class _HomeScreenState extends State<HomeScreen> {
         color: Colors.black.withOpacity(0.1),
         spreadRadius: 1,
         blurRadius: 5,
-        offset: const Offset(2, 2),
+        offset: Offset(2, 2),
       ),
     ],
   );
