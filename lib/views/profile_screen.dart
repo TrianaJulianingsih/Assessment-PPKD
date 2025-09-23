@@ -152,13 +152,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-           SnackBar(content: Text("Profil berhasil diperbarui")),
+           SnackBar(content: Text("Profil berhasil diperbarui", style: TextStyle(fontFamily: "StageGrotesk_Regular"),)),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Gagal update: $e")),
+          SnackBar(content: Text("Gagal update: $e", style: TextStyle(fontFamily: "StageGrotesk_Regular"),)),
         );
       }
     } finally {

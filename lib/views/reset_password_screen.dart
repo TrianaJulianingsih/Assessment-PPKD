@@ -125,7 +125,6 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   ),
         
                 SizedBox(height: 20),
-        
                 Text(
                   "Kode OTP",
                   style: TextStyle(fontSize: 16, fontFamily: "StageGrotesk_Bold"),
@@ -152,9 +151,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     hintStyle: TextStyle(fontFamily: "StageGrotesk_Regular"),
                   ),
                 ),
-        
                 SizedBox(height: 20),
-        
                 Text(
                   "Password Baru",
                   style: TextStyle(fontSize: 16, fontFamily: "StageGrotesk_Bold"),

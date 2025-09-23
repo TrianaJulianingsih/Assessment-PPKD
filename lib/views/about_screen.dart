@@ -89,7 +89,7 @@ class _AboutScreenState extends State<AboutScreen> {
                 child: Column(
                   children: [
                     Text(
-                      "Kelas Hadir adalah aplikasi absensi kehadiran yang memudahkan guru dan siswa mencatat serta memantau kehadiran secara real time. Dengan Kelas Hadir, proses pencatatan absensi menjadi lebih cepat dan akurat melalui fitur check-in digital, laporan kehadiran otomatis, dan notifikasi pengingat. Aplikasi Kelas Hadir dirancang sebagai solusi manajemen kehadiran yang efisien, memungkinkan institusi pendidikan mengelola data presensi secara terintegrasi dan aman. Tak perlu repot lagi absen manual! Kelas Hadir membantu mencatat kehadiran siswa dan guru hanya dengan satu sentuhan.",
+                      "Kelas Hadir adalah aplikasi absensi kehadiran yang memudahkan siswa mencatat serta memantau kehadiran secara real time. Dengan Kelas Hadir, proses pencatatan absensi menjadi lebih cepat dan akurat melalui fitur check-in digital, laporan kehadiran otomatis, dan notifikasi pengingat. Aplikasi Kelas Hadir dirancang sebagai solusi manajemen kehadiran yang efisien, memungkinkan institusi pendidikan mengelola data presensi secara terintegrasi dan aman. Tak perlu repot lagi absen manual! Kelas Hadir membantu mencatat kehadiran siswa hanya dengan satu sentuhan.",
                       style: TextStyle(fontFamily: "StageGrotesk_Regular", fontSize: 16),
                       textAlign: TextAlign.center,
                     ),
