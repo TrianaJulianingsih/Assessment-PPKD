@@ -7,7 +7,8 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:absensi_apps/models/absen_today.dart';
-import 'package:geocoding/geocoding.dart'; // Tambahkan package geocoding
+import 'package:geocoding/geocoding.dart';
+import 'package:lottie/lottie.dart' hide Marker;
 
 class PresenceScreen extends StatefulWidget {
   const PresenceScreen({super.key});
@@ -21,7 +22,7 @@ class _PresenceScreenState extends State<PresenceScreen> {
   Completer<GoogleMapController> _mapController = Completer();
   LatLng? _currentLatLng;
   String? _status;
-  String? _currentAddress; 
+  String? _currentAddress;
   DateTime _today = DateTime.now();
   bool _loading = true;
   AbsenTodayModel? _todayModel;
@@ -114,18 +115,33 @@ class _PresenceScreenState extends State<PresenceScreen> {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
             return AlertDialog(
-              title: Text("Pertanyaan Keamanan"),
+              title: Text(
+                "Jawab Pertanyaan Dibawah Ini",
+                style: TextStyle(
+                  fontFamily: "StageGrotesk_Medium",
+                  fontSize: 20,
+                ),
+              ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     q['question'],
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontFamily: "StageGrotesk_Regular",
+                      fontSize: 16,
+                    ),
                   ),
                   SizedBox(height: 10),
                   for (final opt in q['options'])
                     RadioListTile<String>(
-                      title: Text(opt),
+                      title: Text(
+                        opt,
+                        style: TextStyle(
+                          fontFamily: "StageGrotesk_Regular",
+                          fontSize: 16,
+                        ),
+                      ),
                       value: opt,
                       groupValue: selectedAnswer,
                       onChanged: (val) =>
@@ -136,7 +152,14 @@ class _PresenceScreenState extends State<PresenceScreen> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context, false),
-                  child: Text("Batal"),
+                  child: Text(
+                    "Batal",
+                    style: TextStyle(
+                      fontFamily: "StageGrotesk_Bold",
+                      fontSize: 16,
+                      color: Colors.red,
+                    ),
+                  ),
                 ),
                 ElevatedButton(
                   onPressed: () {
@@ -145,7 +168,17 @@ class _PresenceScreenState extends State<PresenceScreen> {
                       Navigator.pop(context, isCorrect);
                     }
                   },
-                  child: Text("Submit"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFF1E3A8A),
+                  ),
+                  child: Text(
+                    "Submit",
+                    style: TextStyle(
+                      fontFamily: "StageGrotesk_Bold",
+                      fontSize: 16,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
               ],
             );
@@ -157,13 +190,62 @@ class _PresenceScreenState extends State<PresenceScreen> {
     return result ?? false;
   }
 
+  Future<void> _showLottieDialog(String asset, String message) async {
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  height: 150,
+                  child: Lottie.asset(asset, repeat: false),
+                ),
+                SizedBox(height: 15),
+                Text(
+                  message,
+                  style: TextStyle(
+                    fontFamily: "StageGrotesk_Medium",
+                    fontSize: 18,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 10),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFF1E3A8A),
+                  ),
+                  child: Text(
+                    "OK",
+                    style: TextStyle(
+                      fontFamily: "StageGrotesk_Bold",
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> _handleCheckIn() async {
     if (_currentLatLng == null) return;
 
     final isCorrect = await _askQuestion();
     if (!isCorrect) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Jawaban salah, silakan coba lagi", style: TextStyle(fontFamily: "StageGrotesk_Regular"),)),
+        SnackBar(content: Text("Jawaban salah, silakan coba lagi")),
       );
       return;
     }
@@ -174,18 +256,17 @@ class _PresenceScreenState extends State<PresenceScreen> {
       checkIn: DateFormat('HH:mm').format(now),
       lat: _currentLatLng!.latitude,
       lng: _currentLatLng!.longitude,
-      address: _currentAddress ?? "Lokasi saya", 
+      address: _currentAddress ?? "Lokasi saya",
     );
 
     if (model != null) {
       await _loadTodayData();
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Check-In berhasil", style: TextStyle(fontFamily: "StageGrotesk_Medium"),)));
+      await _showLottieDialog(
+        "assets/animations/success.json",
+        "Check-In berhasil!",
+      );
     } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Gagal Check-In", style: TextStyle(fontFamily: "StageGrotesk_Medium"))));
+      await _showLottieDialog("assets/animations/failed.json", "Gagal Check-In");
     }
   }
 
@@ -198,18 +279,17 @@ class _PresenceScreenState extends State<PresenceScreen> {
       checkOut: DateFormat('HH:mm').format(now),
       lat: _currentLatLng!.latitude,
       lng: _currentLatLng!.longitude,
-      address: _currentAddress ?? "Lokasi saya", 
+      address: _currentAddress ?? "Lokasi saya",
     );
 
     if (model != null) {
       await _loadTodayData();
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Check-Out berhasil", style: TextStyle(fontFamily: "StageGrotesk_Medium"))));
+      await _showLottieDialog(
+        "assets/animations/success.json",
+        "Check-Out berhasil!",
+      );
     } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Gagal Check-Out", style: TextStyle(fontFamily: "StageGrotesk_Medium"))));
+      await _showLottieDialog("assets/animations/failed.json", "Gagal Check-Out");
     }
   }
 
@@ -266,11 +346,17 @@ class _PresenceScreenState extends State<PresenceScreen> {
                 children: [
                   Text(
                     "Latitude: ${_currentLatLng?.latitude.toStringAsFixed(5) ?? '-'}",
-                    style: TextStyle(fontFamily: "StageGrotesk_Regular", fontSize: 16),
+                    style: TextStyle(
+                      fontFamily: "StageGrotesk_Regular",
+                      fontSize: 16,
+                    ),
                   ),
                   Text(
                     "Longitude: ${_currentLatLng?.longitude.toStringAsFixed(5) ?? '-'}",
-                    style: TextStyle(fontFamily: "StageGrotesk_Regular", fontSize: 16),
+                    style: TextStyle(
+                      fontFamily: "StageGrotesk_Regular",
+                      fontSize: 16,
+                    ),
                   ),
                 ],
               ),
@@ -279,14 +365,20 @@ class _PresenceScreenState extends State<PresenceScreen> {
               padding: EdgeInsets.only(right: 260, top: 5),
               child: Text(
                 "Status : ${_status ?? 'Belum absen'}",
-                style: TextStyle(fontFamily: "StageGrotesk_Regular", fontSize: 16),
+                style: TextStyle(
+                  fontFamily: "StageGrotesk_Regular",
+                  fontSize: 16,
+                ),
               ),
             ),
             Padding(
               padding: EdgeInsets.only(left: 15, top: 5),
               child: Text(
                 "Lokasi : ${_currentAddress ?? 'Mendapatkan lokasi...'}",
-                style: TextStyle(fontFamily: "StageGrotesk_Regular", fontSize: 16),
+                style: TextStyle(
+                  fontFamily: "StageGrotesk_Regular",
+                  fontSize: 16,
+                ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
