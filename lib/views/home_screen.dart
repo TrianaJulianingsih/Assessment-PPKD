@@ -1,15 +1,15 @@
-import 'package:absensi_apps/api/statistik.dart';
-import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:absensi_apps/api/profile.dart';
 import 'package:absensi_apps/api/attendance.dart';
 import 'package:absensi_apps/api/history.dart';
-import 'package:absensi_apps/models/get_profile_model.dart';
-import 'package:absensi_apps/models/absen_today.dart';
-import 'package:absensi_apps/models/history_absen_model.dart';
+import 'package:absensi_apps/api/profile.dart';
+import 'package:absensi_apps/api/statistik.dart';
 import 'package:absensi_apps/models/absen_stats_model.dart'; // Import model stats
-import 'package:geolocator/geolocator.dart';
+import 'package:absensi_apps/models/absen_today.dart';
+import 'package:absensi_apps/models/get_profile_model.dart';
+import 'package:absensi_apps/models/history_absen_model.dart';
+import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:intl/intl.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -30,6 +30,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    _todayFuture = AttendanceAPI.getToday(date: today);
     _profileFuture = ProfileAPI.getProfile();
     _todayFuture = AttendanceAPI.getToday();
     _historyFuture = HistoryAPI.getHistory();
@@ -146,7 +148,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       Text(
                         "Selamat ${_getGreeting()}",
-                        style: TextStyle(fontSize: 14, fontFamily: "StageGrotesk_Regular"),
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontFamily: "StageGrotesk_Regular",
+                        ),
                       ),
                       Text(
                         profile.name ?? "-",
@@ -157,7 +162,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       Text(
                         profile.training?.title ?? "No Training",
-                        style: TextStyle(fontSize: 14, fontFamily: "StageGrotesk_Regular"),
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontFamily: "StageGrotesk_Regular",
+                        ),
                       ),
                       SizedBox(height: 5),
                     ],
@@ -184,7 +192,10 @@ class _HomeScreenState extends State<HomeScreen> {
             width: 350,
             padding: EdgeInsets.all(16),
             decoration: _boxWhite(),
-            child: Text("Tidak ada data statistik", style: TextStyle(fontFamily: "StageGrotesk_Regular"),),
+            child: Text(
+              "Tidak ada data statistik",
+              style: TextStyle(fontFamily: "StageGrotesk_Regular"),
+            ),
           );
         }
 
@@ -224,7 +235,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 Text(
                   "Kehadiran: $totalMasuk/$totalAbsen "
                   "(${(totalMasuk / totalAbsen * 100).toStringAsFixed(1)}%)",
-                  style: TextStyle(fontSize: 14, fontFamily: "StageGrotesk_Regular"),
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontFamily: "StageGrotesk_Regular",
+                  ),
                 ),
               ],
               SizedBox(height: 5),
@@ -279,17 +293,33 @@ class _HomeScreenState extends State<HomeScreen> {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return CircularProgressIndicator();
         }
+
         if (!snapshot.hasData || snapshot.data?.data == null) {
           return Container(
             width: 350,
             padding: EdgeInsets.all(16),
             decoration: _boxWhite(),
-            child: Text("Belum ada data absen hari ini", style: TextStyle(fontFamily: "StageGrotesk_Medium"),),
+            child: Text(
+              "Belum ada data absen hari ini",
+              style: TextStyle(fontFamily: "StageGrotesk_Medium"),
+            ),
           );
         }
+
         final today = snapshot.data!.data!;
+        final status = today.status ?? "Belum Absen";
+
         return Column(
           children: [
+            Text(
+              DateFormat("EEEE, dd MMM yyyy", "id_ID").format(DateTime.now()),
+              style: TextStyle(
+                color: Color(0xFF1E3A8A),
+                fontSize: 20,
+                fontFamily: "StageGrotesk_Bold",
+              ),
+            ),
+            SizedBox(height: 10),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -303,26 +333,21 @@ class _HomeScreenState extends State<HomeScreen> {
               width: 350,
               padding: EdgeInsets.all(16),
               decoration: _boxBlue(),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
                 children: [
-                  Row(
-                    children: [
-                      Icon(Icons.location_on, color: Colors.white, size: 20),
-                      SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          _currentAddress ?? "Lokasi tidak tersedia",
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.white,
-                            fontFamily: "StageGrotesk_Regular",
-                          ),
-                          maxLines: 4,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                  Icon(Icons.location_on, color: Colors.white, size: 20),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _currentAddress ?? "Lokasi tidak tersedia",
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.white,
+                        fontFamily: "StageGrotesk_Regular",
                       ),
-                    ],
+                      maxLines: 4,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ],
               ),
@@ -371,11 +396,17 @@ class _HomeScreenState extends State<HomeScreen> {
                         DateFormat(
                           'dd MMM yyyy',
                         ).format(h.attendanceDate ?? DateTime.now()),
-                        style: TextStyle(fontSize: 16, fontFamily: "StageGrotesk_Medium"),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontFamily: "StageGrotesk_Medium",
+                        ),
                       ),
                       subtitle: Text(
                         "In: ${h.checkInTime ?? '-'} | Out: ${h.checkOutTime ?? '-'}",
-                        style: TextStyle(fontSize: 14, fontFamily: "StageGrotesk_Medium"),
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontFamily: "StageGrotesk_Medium",
+                        ),
                       ),
                       trailing: Container(
                         padding: EdgeInsets.symmetric(
@@ -388,7 +419,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         child: Text(
                           h.status ?? "-",
-                          style: TextStyle(fontSize: 12, color: Colors.white, fontFamily: "StageGrotesk_Regular"),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.white,
+                            fontFamily: "StageGrotesk_Regular",
+                          ),
                         ),
                       ),
                     ),
@@ -424,7 +459,14 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(title, style: TextStyle(color: Colors.white, fontSize: 14, fontFamily: "StageGrotesk_Medium")),
+          Text(
+            title,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontFamily: "StageGrotesk_Medium",
+            ),
+          ),
           SizedBox(height: 5),
           Text(
             time,

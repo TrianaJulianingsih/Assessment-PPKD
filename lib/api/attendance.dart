@@ -8,6 +8,7 @@ import 'package:absensi_apps/models/absen_masuk_model.dart';
 import 'package:absensi_apps/models/absen_today.dart';
 import 'package:absensi_apps/shared_preferences.dart/shared_preference.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 
 class AttendanceAPI {
   static Future<AbsenCheckInModel?> checkIn({
@@ -80,17 +81,18 @@ class AttendanceAPI {
     return null;
   }
 
-  static Future<AbsenTodayModel?> getToday() async {
+  static Future<AbsenTodayModel?> getToday({String? date}) async {
     final token = await PreferenceHandler.getToken();
-
     if (token == null) {
       print("Token tidak tersedia");
       return null;
     }
+    final String today =
+        date ?? DateFormat('yyyy-MM-dd').format(DateTime.now());
 
     try {
       final response = await http.get(
-        Uri.parse(Endpoint.absenToday),
+        Uri.parse("${Endpoint.absenToday}?attendance_date=$today"),
         headers: {
           "Authorization": "Bearer $token",
           "Content-Type": "application/json",
@@ -102,26 +104,12 @@ class AttendanceAPI {
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> jsonMap = jsonDecode(response.body);
-
-        if (jsonMap['data'] == null) {
-          print("Data absen hari ini null");
-          return null;
-        }
-
+        if (jsonMap['data'] == null) return null;
         return AbsenTodayModel.fromJson(jsonMap);
-      } else if (response.statusCode == 401) {
-        print("Unauthorized. Token kemungkinan kadaluarsa atau salah");
-      } else if (response.statusCode == 403) {
-        print("Forbidden. Anda tidak memiliki akses ke endpoint ini");
-      } else if (response.statusCode >= 500) {
-        print("Server error (${response.statusCode})");
-      } else {
-        print("Error tidak terduga: ${response.statusCode}");
       }
     } catch (e) {
       print("Exception saat memanggil getToday: $e");
     }
-
     return null;
   }
 }

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:absensi_apps/api/profile.dart';
 import 'package:absensi_apps/extension/navigation.dart';
 import 'package:absensi_apps/models/get_profile_model.dart';
+import 'package:absensi_apps/shared_preferences.dart/shared_preference.dart';
 import 'package:absensi_apps/views/about_screen.dart';
 import 'package:absensi_apps/views/login_screen.dart';
 import 'package:flutter/material.dart';
@@ -319,11 +320,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   color: Colors.red,
                   onTap: _updating
                       ? null
-                      : () {
-                          Navigator.pushReplacementNamed(
-                            context,
-                            LoginScreen.id,
-                          );
+                      : () async {
+                          await PreferenceHandler.logout();
+                          if (mounted) {
+                            Navigator.pushReplacementNamed(
+                              context,
+                              LoginScreen.id,
+                            );
+                          }
                         },
                 ),
               ),
