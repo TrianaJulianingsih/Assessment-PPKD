@@ -1,4 +1,3 @@
-import 'package:absensi_apps/extension/navigation.dart';
 import 'package:absensi_apps/shared_preferences.dart/shared_preference.dart';
 import 'package:absensi_apps/utils/app_image.dart';
 import 'package:absensi_apps/views/buttom_nav.dart';
@@ -22,16 +21,25 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   void isLogin() async {
-    bool? isLogin = await PreferenceHandler.getLogin();
+    final isLogin = await PreferenceHandler.getLogin();
 
-    Future.delayed(Duration(seconds: 5)).then((value) async {
-      print(isLogin);
-      if (isLogin == true) {
-        context.pushReplacementNamed(ButtomNav.id);
-      } else {
-        context.push(LoginScreen());
-      }
-    });
+    final token = await PreferenceHandler.getToken();
+
+    await Future.delayed(const Duration(seconds: 5));
+
+    if (isLogin == true && token != null) {
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => ButtomNav()),
+      );
+    } else {
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => LoginScreen()),
+      );
+    }
   }
 
   @override

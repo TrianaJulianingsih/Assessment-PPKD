@@ -18,9 +18,9 @@ class PreferenceHandler {
     return prefs.getString(tokenKey);
   }
 
-  static Future<bool?> getLogin() async {
+  static Future<bool> getLogin() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(loginKey);
+    return prefs.getBool(loginKey) ?? false;
   }
 
   static Future<void> logout() async {

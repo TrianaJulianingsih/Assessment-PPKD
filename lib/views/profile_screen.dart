@@ -203,7 +203,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           content: const Text(
             "Apakah Anda yakin ingin keluar dari akun?",
-            style: TextStyle(fontFamily: "StageGrotesk_Regular"),
+            style: TextStyle(fontFamily: "StageGrotesk_Regular", fontSize: 16),
           ),
           actions: [
             TextButton(
@@ -212,7 +212,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 "Batal",
                 style: TextStyle(
                   fontFamily: "StageGrotesk_Medium",
-                  color: Colors.grey,
+                  color: Colors.black,
                 ),
               ),
             ),
