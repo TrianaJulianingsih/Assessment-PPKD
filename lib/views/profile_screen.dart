@@ -1,8 +1,8 @@
 import 'dart:io';
+
 import 'package:absensi_apps/api/profile.dart';
 import 'package:absensi_apps/extension/navigation.dart';
 import 'package:absensi_apps/models/get_profile_model.dart';
-import 'package:absensi_apps/shared_preferences.dart/shared_preference.dart';
 import 'package:absensi_apps/views/about_screen.dart';
 import 'package:absensi_apps/views/login_screen.dart';
 import 'package:flutter/material.dart';
@@ -38,9 +38,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (e) {
       setState(() => _loading = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Gagal memuat profil: $e")),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Gagal memuat profil: $e")));
       }
     }
   }
@@ -64,23 +64,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _uploadImage() async {
     if (_selectedImage == null) return;
-    
+
     setState(() => _updating = true);
-    
+
     try {
       await ProfileAPI.updateProfilePhoto(image: _selectedImage);
       await _fetchProfile();
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-           SnackBar(content: Text("Foto profil berhasil diperbarui")),
+          SnackBar(content: Text("Foto profil berhasil diperbarui")),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Gagal mengupload foto: $e")),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Gagal mengupload foto: $e")));
       }
     } finally {
       setState(() {
@@ -96,14 +96,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title:  Text("Edit Profile", style: TextStyle(fontFamily: "StageGrotesk_Medium"),),
+        title: Text(
+          "Edit Profile",
+          style: TextStyle(fontFamily: "StageGrotesk_Medium"),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: nameController,
-              decoration:  InputDecoration(
-                labelText: "Nama", labelStyle: TextStyle(fontFamily: "StageGrotesk_Regular"),
+              decoration: InputDecoration(
+                labelText: "Nama",
+                labelStyle: TextStyle(fontFamily: "StageGrotesk_Regular"),
                 border: OutlineInputBorder(),
               ),
             ),
@@ -112,14 +116,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child:  Text("Batal", style: TextStyle(fontFamily: "StageGrotesk_Medium", color: Colors.red),),
+            child: Text(
+              "Batal",
+              style: TextStyle(
+                fontFamily: "StageGrotesk_Medium",
+                color: Colors.red,
+              ),
+            ),
           ),
           ElevatedButton(
             onPressed: () async {
               final name = nameController.text.trim();
               if (name.isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                   SnackBar(content: Text("Nama tidak boleh kosong")),
+                  SnackBar(content: Text("Nama tidak boleh kosong")),
                 );
                 return;
               }
@@ -127,10 +137,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Navigator.pop(context);
               await _updateName(name);
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFF1E3A8A)
+            style: ElevatedButton.styleFrom(backgroundColor: Color(0xFF1E3A8A)),
+            child: Text(
+              "Simpan",
+              style: TextStyle(
+                fontFamily: "StageGrotesk_Medium",
+                color: Colors.white,
+                fontSize: 14,
+              ),
             ),
-            child:  Text("Simpan", style: TextStyle(fontFamily: "StageGrotesk_Medium", color: Colors.white, fontSize: 14),),
           ),
         ],
       ),
@@ -149,16 +164,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
           );
         }
       });
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-           SnackBar(content: Text("Profil berhasil diperbarui", style: TextStyle(fontFamily: "StageGrotesk_Regular"),)),
+          SnackBar(
+            content: Text(
+              "Profil berhasil diperbarui",
+              style: TextStyle(fontFamily: "StageGrotesk_Regular"),
+            ),
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Gagal update: $e", style: TextStyle(fontFamily: "StageGrotesk_Regular"),)),
+          SnackBar(
+            content: Text(
+              "Gagal update: $e",
+              style: TextStyle(fontFamily: "StageGrotesk_Regular"),
+            ),
+          ),
         );
       }
     } finally {
@@ -169,11 +194,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return  Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
+      return Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     final user = _profile?.data;
@@ -181,7 +202,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title:  Text(
+        title: Text(
           "Profile",
           style: TextStyle(
             fontFamily: "StageGrotesk_Bold",
@@ -190,17 +211,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
         centerTitle: true,
-        backgroundColor:  Color(0xFF1E3A8A),
+        backgroundColor: Color(0xFF1E3A8A),
       ),
       body: RefreshIndicator(
         onRefresh: _fetchProfile,
         child: SingleChildScrollView(
-          physics:  AlwaysScrollableScrollPhysics(),
+          physics: AlwaysScrollableScrollPhysics(),
           child: Column(
             children: [
               Container(
                 width: double.infinity,
-                padding:  EdgeInsets.all(20),
+                padding: EdgeInsets.all(20),
                 color: Colors.white,
                 child: Column(
                   children: [
@@ -214,7 +235,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           child: _getProfilePlaceholder(user),
                         ),
                         if (_updating)
-                           CircularProgressIndicator(
+                          CircularProgressIndicator(
                             color: Colors.white,
                             strokeWidth: 3,
                           ),
@@ -225,12 +246,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             child: GestureDetector(
                               onTap: _pickImage,
                               child: Container(
-                                padding:  EdgeInsets.all(4),
-                                decoration:  BoxDecoration(
+                                padding: EdgeInsets.all(4),
+                                decoration: BoxDecoration(
                                   color: Colors.blue,
                                   shape: BoxShape.circle,
                                 ),
-                                child:  Icon(
+                                child: Icon(
                                   Icons.edit,
                                   size: 16,
                                   color: Colors.white,
@@ -240,32 +261,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                       ],
                     ),
-                     SizedBox(height: 16),
+                    SizedBox(height: 16),
                     Text(
                       user?.name ?? "-",
-                      style:  TextStyle(
+                      style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                     SizedBox(height: 4),
+                    SizedBox(height: 4),
                     Text(
-                      user?.email ?? "-",
-                      style:  TextStyle(fontSize: 16, color: Colors.grey),
+                      "Batch Ke-${user?.batchKe}" ?? "-",
+                      style: TextStyle(fontSize: 16, color: Colors.grey),
                     ),
-                     SizedBox(height: 4),
+                    SizedBox(height: 4),
                     Text(
                       user?.trainingTitle ?? "Training tidak tersedia",
-                      style:  TextStyle(
-                        fontSize: 16,
-                        color: Colors.black87,
-                      ),
+                      style: TextStyle(fontSize: 16, color: Colors.black87),
                       textAlign: TextAlign.center,
                     ),
                   ],
                 ),
               ),
-               SizedBox(height: 16),
+              SizedBox(height: 16),
               Container(
                 color: Colors.white,
                 child: Column(
@@ -275,7 +293,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       title: "Edit Profile",
                       onTap: _updating ? null : _editProfile,
                       trailing: _updating
-                          ?  SizedBox(
+                          ? SizedBox(
                               width: 20,
                               height: 20,
                               child: CircularProgressIndicator(strokeWidth: 2),
@@ -292,7 +310,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ],
                 ),
               ),
-               SizedBox(height: 16),
+              SizedBox(height: 16),
               Container(
                 color: Colors.white,
                 child: _buildMenuItem(
@@ -302,7 +320,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   onTap: _updating
                       ? null
                       : () {
-                          Navigator.pushReplacementNamed(context, LoginScreen.id);
+                          Navigator.pushReplacementNamed(
+                            context,
+                            LoginScreen.id,
+                          );
                         },
                 ),
               ),
@@ -316,18 +337,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
   ImageProvider? _getProfileImage(ProfileData? user) {
     if (_selectedImage != null) {
       return FileImage(_selectedImage!);
-    } else if (user?.profilePhotoUrl != null && user!.profilePhotoUrl!.isNotEmpty) {
+    } else if (user?.profilePhotoUrl != null &&
+        user!.profilePhotoUrl!.isNotEmpty) {
       return NetworkImage(user.profilePhotoUrl!);
     }
     return null;
   }
 
   Widget? _getProfilePlaceholder(ProfileData? user) {
-    if (_selectedImage != null || 
+    if (_selectedImage != null ||
         (user?.profilePhotoUrl != null && user!.profilePhotoUrl!.isNotEmpty)) {
       return null;
     }
-    return  Icon(Icons.person, size: 50, color: Colors.grey);
+    return Icon(Icons.person, size: 50, color: Colors.grey);
   }
 
   Widget _buildMenuItem({
@@ -347,9 +369,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
           fontSize: 16,
         ),
       ),
-      trailing: trailing ??  Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+      trailing:
+          trailing ??
+          Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
       onTap: onTap,
-      contentPadding:  EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
     );
   }
 }
