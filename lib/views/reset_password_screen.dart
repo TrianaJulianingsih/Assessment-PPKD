@@ -49,10 +49,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         Future.delayed(Duration(seconds: 3), () {
           Navigator.pushNamedAndRemoveUntil(
             context,
-            "/login_screen", // ganti dengan LoginScreen.id jika Anda pakai const id
-            (Route<dynamic> route) => false, // hapus semua route sebelumnya
+            "/login_screen",
+            (Route<dynamic> route) => false,
           );
-          ;
         });
       } catch (e) {
         setState(() {
@@ -108,7 +107,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                       style: TextStyle(color: Colors.red),
                     ),
                   ),
-        
+
                 if (successMessage != null)
                   Container(
                     width: double.infinity,
@@ -123,11 +122,14 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                       style: TextStyle(color: Colors.green),
                     ),
                   ),
-        
+
                 SizedBox(height: 20),
                 Text(
                   "Kode OTP",
-                  style: TextStyle(fontSize: 16, fontFamily: "StageGrotesk_Bold"),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontFamily: "StageGrotesk_Bold",
+                  ),
                 ),
                 SizedBox(height: 10),
                 TextFormField(
@@ -154,7 +156,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 SizedBox(height: 20),
                 Text(
                   "Password Baru",
-                  style: TextStyle(fontSize: 16, fontFamily: "StageGrotesk_Bold"),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontFamily: "StageGrotesk_Bold",
+                  ),
                 ),
                 SizedBox(height: 10),
                 TextFormField(
@@ -189,12 +194,15 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     ),
                   ),
                 ),
-        
+
                 SizedBox(height: 20),
-        
+
                 Text(
                   "Konfirmasi Password Baru",
-                  style: TextStyle(fontSize: 16, fontFamily: "StageGrotesk_Bold"),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontFamily: "StageGrotesk_Bold",
+                  ),
                 ),
                 SizedBox(height: 10),
                 TextFormField(
@@ -229,9 +237,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     ),
                   ),
                 ),
-        
+
                 SizedBox(height: 30),
-        
+
                 SizedBox(
                   width: double.infinity,
                   height: 56,
@@ -255,9 +263,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                           ),
                   ),
                 ),
-        
+
                 SizedBox(height: 20),
-        
+
                 TextButton(
                   onPressed: () {
                     Navigator.pop(context);

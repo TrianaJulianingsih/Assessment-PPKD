@@ -1,7 +1,7 @@
 import 'package:absensi_apps/api/history.dart';
+import 'package:absensi_apps/models/history_absen_model.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:absensi_apps/models/history_absen_model.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -115,20 +115,21 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   margin: EdgeInsets.only(bottom: 12),
                   child: ListTile(
                     leading: Icon(Icons.calendar_today_rounded, size: 20),
-                    title: Column(
+                    title: Text(
+                      DateFormat(
+                        'dd MMM yyyy',
+                      ).format(item.attendanceDate ?? DateTime.now()),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontFamily: "StageGrotesk_Medium",
+                      ),
+                    ),
+                    subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         if (item.checkInTime != null)
                           Text(
-                            'Check-in: ${item.checkInTime}',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontFamily: "StageGrotesk_Medium",
-                            ),
-                          ),
-                        if (item.checkOutTime != null)
-                          Text(
-                            'Check-out: ${item.checkOutTime}',
+                            'In: ${item.checkInTime} | Out: ${item.checkOutTime}',
                             style: TextStyle(
                               fontSize: 14,
                               fontFamily: "StageGrotesk_Medium",

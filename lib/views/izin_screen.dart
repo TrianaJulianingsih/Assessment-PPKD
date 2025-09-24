@@ -1,8 +1,8 @@
 import 'package:absensi_apps/api/history.dart';
 import 'package:absensi_apps/api/izin.dart';
 import 'package:absensi_apps/models/history_absen_model.dart';
-import 'package:flutter/material.dart'; // ✅ Import API
-import 'package:intl/intl.dart'; // Untuk format tanggal (opsional)
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class IzinScreen extends StatefulWidget {
   const IzinScreen({super.key});
@@ -55,7 +55,7 @@ class _IzinScreenState extends State<IzinScreen> {
 }
 
 class LeaveRequestForm extends StatefulWidget {
-  LeaveRequestForm({super.key});
+  const LeaveRequestForm({super.key});
 
   @override
   State<LeaveRequestForm> createState() => _LeaveRequestFormState();
@@ -80,7 +80,7 @@ class _LeaveRequestFormState extends State<LeaveRequestForm> {
               primary: Color(0xFF1E3A8A),
               onPrimary: Colors.white,
             ),
-            dialogBackgroundColor: Colors.white,
+            dialogTheme: DialogThemeData(backgroundColor: Colors.white),
           ),
           child: child!,
         );
@@ -258,7 +258,7 @@ class _LeaveRequestFormState extends State<LeaveRequestForm> {
 }
 
 class LeaveHistoryList extends StatefulWidget {
-  LeaveHistoryList({super.key});
+  const LeaveHistoryList({super.key});
 
   @override
   State<LeaveHistoryList> createState() => _LeaveHistoryListState();
@@ -266,6 +266,7 @@ class LeaveHistoryList extends StatefulWidget {
 
 class _LeaveHistoryListState extends State<LeaveHistoryList> {
   late Future<HistoryModel> _futureHistory;
+  @override
   void initState() {
     super.initState();
     _futureHistory = HistoryAPI.getHistory();
