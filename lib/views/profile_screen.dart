@@ -192,6 +192,53 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  Future<void> _confirmLogout() async {
+    final bool? result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: const Text(
+            "Konfirmasi Logout",
+            style: TextStyle(fontFamily: "StageGrotesk_Bold"),
+          ),
+          content: const Text(
+            "Apakah Anda yakin ingin keluar dari akun?",
+            style: TextStyle(fontFamily: "StageGrotesk_Regular"),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: const Text(
+                "Batal",
+                style: TextStyle(
+                  fontFamily: "StageGrotesk_Medium",
+                  color: Colors.grey,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: const Text(
+                "Logout",
+                style: TextStyle(
+                  fontFamily: "StageGrotesk_Medium",
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+    if (result == true) {
+      await PreferenceHandler.logout();
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, LoginScreen.id);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_loading) {
@@ -318,17 +365,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   icon: Icons.logout,
                   title: "Logout",
                   color: Colors.red,
-                  onTap: _updating
-                      ? null
-                      : () async {
-                          await PreferenceHandler.logout();
-                          if (mounted) {
-                            Navigator.pushReplacementNamed(
-                              context,
-                              LoginScreen.id,
-                            );
-                          }
-                        },
+                  onTap: _updating ? null : _confirmLogout,
                 ),
               ),
             ],

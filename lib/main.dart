@@ -1,3 +1,4 @@
+import 'package:absensi_apps/views/buttom_nav.dart';
 import 'package:absensi_apps/views/forgot_password_screen.dart';
 import 'package:absensi_apps/views/login_screen.dart';
 import 'package:absensi_apps/views/presence_screen.dart';
@@ -30,19 +31,18 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         fontFamily: 'StageGrotesk_Regular',
       ),
-      localizationsDelegates: [
+      localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: [
-        const Locale('id', 'ID'), // Indonesian
-      ],
-      home: SplashScreen(),
+      supportedLocales: const [Locale('id', 'ID')],
+      home: const SplashScreen(), // <- selalu mulai dari Splash
       routes: {
-        LoginScreen.id: (context) => LoginScreen(),
-        PresenceScreen.id: (context) => PresenceScreen(),
-        ForgotPasswordScreen.id: (context) => ForgotPasswordScreen(),
+        LoginScreen.id: (context) => const LoginScreen(),
+        PresenceScreen.id: (context) => const PresenceScreen(),
+        ForgotPasswordScreen.id: (context) => const ForgotPasswordScreen(),
+        ButtomNav.id: (context) => const ButtomNav(), // <- pastikan ada
       },
       debugShowCheckedModeBanner: false,
     );
