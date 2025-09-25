@@ -31,13 +31,13 @@ class _SplashScreenState extends State<SplashScreen> {
       if (!mounted) return;
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => LoginScreen()),
+        MaterialPageRoute(builder: (_) => ButtomNav()),
       );
     } else {
       if (!mounted) return;
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => ButtomNav()),
+        MaterialPageRoute(builder: (_) => LoginScreen()),
       );
     }
   }

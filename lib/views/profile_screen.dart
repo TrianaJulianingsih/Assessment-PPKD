@@ -192,71 +192,51 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  static void handleLogout(BuildContext context) async {
-    await PreferenceHandler.logout();
-
-    // Tampilkan snackbar
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("✅ Berhasil keluar dari akun"),
-        backgroundColor: Colors.green,
-      ),
-    );
-
-    // Pindah ke LoginScreen
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (context) => const LoginScreen()),
-      (route) => false,
-    );
-  }
-
-  // 🔔 Dialog konfirmasi logout
-  void _showLogoutDialog(BuildContext context) {
-    showDialog(
+  Future<void> _confirmLogout() async {
+    final bool? result = await showDialog<bool>(
       context: context,
-      builder: (context) {
+      builder: (ctx) {
         return AlertDialog(
-          backgroundColor: Colors.grey[900],
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
           title: const Text(
             "Konfirmasi Logout",
-            style: TextStyle(color: Colors.white),
+            style: TextStyle(fontFamily: "StageGrotesk_Bold"),
           ),
           content: const Text(
-            "Apakah kamu yakin ingin keluar?",
-            style: TextStyle(color: Colors.white70),
+            "Apakah Anda yakin ingin keluar dari akun?",
+            style: TextStyle(fontFamily: "StageGrotesk_Regular", fontSize: 16),
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.of(ctx).pop(false),
               child: const Text(
                 "Batal",
-                style: TextStyle(color: Colors.white70),
+                style: TextStyle(
+                  fontFamily: "StageGrotesk_Medium",
+                  color: Colors.black,
+                ),
               ),
             ),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              onPressed: () {
-                Navigator.pop(context); // tutup dialog
-                handleLogout(context); // lanjut logout
-              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              onPressed: () => Navigator.of(ctx).pop(true),
               child: const Text(
-                "Ya, Keluar",
-                style: TextStyle(color: Colors.white70),
+                "Logout",
+                style: TextStyle(
+                  fontFamily: "StageGrotesk_Medium",
+                  color: Colors.white,
+                ),
               ),
             ),
           ],
         );
       },
     );
+    if (result == true) {
+      await PreferenceHandler.logout();
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, LoginScreen.id);
+      }
+    }
   }
 
   @override
@@ -385,9 +365,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   icon: Icons.logout,
                   title: "Logout",
                   color: Colors.red,
-                  onTap: () {
-                    _showLogoutDialog(context);
-                  },
+                  onTap: _updating ? null : _confirmLogout,
                 ),
               ),
             ],
