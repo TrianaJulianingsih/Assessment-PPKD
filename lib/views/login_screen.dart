@@ -209,7 +209,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   },
                   child: Text(
                     "Lupa password?",
-                    style: TextStyle(fontFamily: "StageGrotesk_Regular", color: Color(0xFF1E3A8A), fontSize: 14),
+                    style: TextStyle(
+                      fontFamily: "StageGrotesk_Regular",
+                      color: Color(0xFF1E3A8A),
+                      fontSize: 14,
+                    ),
                   ),
                 ),
                 SizedBox(height: 20),

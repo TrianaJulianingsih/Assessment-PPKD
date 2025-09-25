@@ -129,72 +129,89 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Color(0xFF1E3A8A),
         automaticallyImplyLeading: false,
         title: Text(
           "Registrasi",
-          style: TextStyle(fontFamily: "StageGrotesk_Bold", fontSize: 20),
+          style: TextStyle(
+            fontFamily: "StageGrotesk_Bold",
+            fontSize: 20,
+            color: Colors.white,
+          ),
         ),
         centerTitle: true,
       ),
       backgroundColor: Colors.white,
-      body: SafeArea(
+      body: Padding(
+        padding: const EdgeInsets.all(30),
         child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              pickedFile != null
-                  ? CircleAvatar(
-                      radius: 50,
-                      backgroundImage: FileImage(File(pickedFile!.path)),
-                    )
-                  : CircleAvatar(
-                      radius: 50,
-                      backgroundColor: Colors.grey[200],
-                      child: const Icon(
-                        Icons.person,
-                        size: 50,
-                        color: Colors.grey,
+              Center(
+                child: pickedFile != null
+                    ? CircleAvatar(
+                        radius: 50,
+                        backgroundImage: FileImage(File(pickedFile!.path)),
+                      )
+                    : CircleAvatar(
+                        radius: 50,
+                        backgroundColor: Colors.grey[200],
+                        child: const Icon(
+                          Icons.person,
+                          size: 50,
+                          color: Colors.grey,
+                        ),
                       ),
-                    ),
+              ),
               SizedBox(height: 10),
-              OutlinedButton.icon(
-                onPressed: pickFoto,
-                icon: Icon(Icons.camera_alt, color: Color(0xFF1E3A8A)),
-                label: Text(
-                  "Pilih Foto Profil",
-                  style: TextStyle(
-                    color: Color(0xFF1E3A8A),
-                    fontFamily: "StageGrotesk_Medium",
-                    fontSize: 14,
+              Center(
+                child: OutlinedButton.icon(
+                  onPressed: pickFoto,
+                  icon: Icon(Icons.camera_alt, color: Color(0xFF1E3A8A)),
+                  label: Text(
+                    "Pilih Foto Profil",
+                    style: TextStyle(
+                      color: Color(0xFF1E3A8A),
+                      fontFamily: "StageGrotesk_Medium",
+                      fontSize: 14,
+                    ),
                   ),
                 ),
               ),
               SizedBox(height: 32),
-              Padding(
-                padding: const EdgeInsets.only(right: 310),
-                child: Text("Nama", style: TextStyle(fontFamily: "StageGrotesk_Medium", fontSize: 16),),
+              Text(
+                "Nama",
+                style: TextStyle(
+                  fontFamily: "StageGrotesk_Medium",
+                  fontSize: 16,
+                ),
               ),
-              SizedBox(height: 10,),
+              SizedBox(height: 10),
               TextField(
                 controller: nameController,
                 decoration: _inputDecoration("Masukkan Nama"),
               ),
               SizedBox(height: 16),
-              Padding(
-                padding: const EdgeInsets.only(right: 310),
-                child: Text("Email", style: TextStyle(fontFamily: "StageGrotesk_Medium", fontSize: 16),),
+              Text(
+                "Email",
+                style: TextStyle(
+                  fontFamily: "StageGrotesk_Medium",
+                  fontSize: 16,
+                ),
               ),
-              SizedBox(height: 10,),
+              SizedBox(height: 10),
               TextField(
                 controller: emailController,
                 decoration: _inputDecoration("Masukkan Email"),
               ),
               SizedBox(height: 16),
-              Padding(
-                padding: const EdgeInsets.only(right: 280),
-                child: Text("Password", style: TextStyle(fontFamily: "StageGrotesk_Medium", fontSize: 16),),
+              Text(
+                "Password",
+                style: TextStyle(
+                  fontFamily: "StageGrotesk_Medium",
+                  fontSize: 16,
+                ),
               ),
               SizedBox(height: 10),
               TextField(
@@ -211,10 +228,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ),
               ),
-              SizedBox(height: 16,),
+              SizedBox(height: 16),
               Padding(
-                padding: const EdgeInsets.only(right: 250),
-                child: Text("Jenis Kelamin", style: TextStyle(fontFamily: "StageGrotesk_Medium", fontSize: 16),),
+                padding: const EdgeInsets.only(right: 220),
+                child: Text(
+                  "Jenis Kelamin",
+                  style: TextStyle(
+                    fontFamily: "StageGrotesk_Medium",
+                    fontSize: 16,
+                  ),
+                ),
               ),
               SizedBox(height: 10),
               DropdownButtonFormField<String>(
@@ -225,10 +248,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 onChanged: (val) => setState(() => selectedGender = val),
                 decoration: _inputDecoration("Pilih Jenis Kelamin"),
               ),
-              SizedBox(height: 16,),
-              Padding(
-                padding: const EdgeInsets.only(right: 275),
-                child: Text("Pilih Batch", style: TextStyle(fontFamily: "StageGrotesk_Medium", fontSize: 16),),
+              SizedBox(height: 16),
+              Text(
+                "Pilih Batch",
+                style: TextStyle(
+                  fontFamily: "StageGrotesk_Medium",
+                  fontSize: 16,
+                ),
               ),
               SizedBox(height: 10),
               DropdownButtonFormField<Batches>(
@@ -244,10 +270,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 onChanged: (val) => setState(() => selectedBatch = val),
                 decoration: _inputDecoration("Pilih Batch"),
               ),
-              SizedBox(height: 16,),
-              Padding(
-                padding: const EdgeInsets.only(right: 250),
-                child: Text("Pilih Pelatihan", style: TextStyle(fontFamily: "StageGrotesk_Medium", fontSize: 16),),
+              SizedBox(height: 16),
+              Text(
+                "Pilih Pelatihan",
+                style: TextStyle(
+                  fontFamily: "StageGrotesk_Medium",
+                  fontSize: 16,
+                ),
               ),
               SizedBox(height: 10),
               DropdownButtonFormField<Datum>(
@@ -334,10 +363,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   InputDecoration _inputDecoration(String hint) {
     return InputDecoration(
-      contentPadding: const EdgeInsets.symmetric(
-        vertical: 10, 
-        horizontal: 16,
-      ),
+      contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
       hintText: hint,
       hintStyle: TextStyle(fontFamily: "StageGrotesk_Regular", fontSize: 16),
       filled: true,
